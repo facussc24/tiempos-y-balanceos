@@ -87,6 +87,25 @@ mismo contrato; los archivos de cliente NO se copian al repo (se citan con ruta 
 | 34 | principal | Choque EXACTO en CATIA de la v16 contra el panel (y el gemelo subido 1 mm) | OpenCASCADE: v16 sin choque (luz 0,0455); gemelo 69,573 mm³ | ej16_choque_catia_real |
 | 35 | CATA | Nido que copia el panel del cliente (bloque menos el panel) | intersección 0 y distancia ~0 con OpenCASCADE | ej24_nido_cliente |
 
+## Fase 2, segunda tanda (24/10 12:40): piezas de AFUERA con la respuesta ESCRITA
+
+La principal pasa a CATA cada `ej*.py` de la práctica con el `registro.json` de su corrida del 19/10, en `6- PEDIDOS ENTRE PC (FACUNDO)\para CATA - practica 19-10\` (pedido 27). Mismo contrato y mismo reparto. Los de elementos finitos (41, 43, 45) van a la principal: en CATA no se probó si la R21 tiene Generative Structural Analysis por COM. Revisor por ejercicio: Sonnet (LECCIONES 24/10); Fable, al fundir la tanda.
+
+| N | Quién | Carpeta | Qué se construye en CATIA | Papel y respuesta conocida | Método ya probado |
+|---|---|---|---|---|---|
+| 36 | CATA | `36_cswa_tool_block_e12` | CSWA Sample Exam 2013 oficial de SolidWorks, «Tool Block» etapas 1 (A 81, B 57, C 43) y 2 (84, 59, 45): contorno con R19 tangente a la recta de 10°, R29 y R5; pad de C y agujero Ø14 | Respuestas oficiales del examen: 939,54 g y 1 032,32 g con acero 0,0079 g/mm³ (fuente en el docstring del ej41; el revisor la confirma en el PDF) | ej41_tool_block (+ `ej41_tool_block/` con e1.json, e2.json, contornos.py y gemelo.py; `de_build123d.py`) |
+| 37 | principal | `37_cswa_tool_block_e34` | CSWA 2013 «Tool Block» etapas 3 (A 86, B 58, C 44: Ø11, escalón, ranura dentro de un R41) y 4 (bolsillo con paredes de 1 mm) | Respuestas oficiales: 628,18 g y 432,58 g | ej41b_tool_block_e34 |
+| 38 | CATA | `38_resorte_helice` | Resorte por GSD: círculo R2 barrido por una hélice R20, paso 10, alto 50 (AddNewHelix + plano normal + AddNewRibFromRef); control con el perfil inclinado 4,55° | Fórmula de geometría: volumen = π·2²·5·√((2π·20)² + 10²) (área × largo del camino); inclinado: × cos 4,55° | ej45_resorte |
+| 39 | principal | `39_biela_manivela_dmu` | Biela-manivela con DMU Kinematics (r 30, l 80; tres revoluciones y una prismática; comando de ángulo) | Cinemática exacta: x = r cos θ + √(l² − r² sen² θ) para θ = 0, 30, 60, 90, 120 y 180 | ej49_biela; el 17 (signo del comando) |
+| 40 | CATA | `40_bloque_en_v` | Bloque en V de 90° como ENSAMBLE: el V con dos planos y el eje del cilindro a distancia R de cada uno; altura del eje para D 160 y D 159,86 | Atlantis Press, ejemplo 1 (banco E3): error de posicionamiento = tolerancia / (2 sen 45°) = 0,099 mm; z = R·√2 → 113,137 y 113,038 | ej74_bloque_en_v |
+| 41 | principal | `41_fem_viga` | Elementos finitos (Generative Structural Analysis): viga de acero 200 × 20 × 10 empotrada con 100 N en la punta; flecha y las dos primeras frecuencias | Euler-Bernoulli: δ = F L³ / (3 E I); f = (β²/2π)·√(E I / (ρ A L⁴)), β1 = 1,8751: 203,7 Hz y 407,5 Hz | ej57_fem_viga, ej60_fem_frecuencias |
+| 42 | CATA | `42_molde_hisopo` | Molde de dos mitades de un hisopo de PP: pieza por revolución, bloque 68,7 × 30 × 30 menos la pieza, partido por el plano de partición | MIT 2.008, examen práctico 1 de 2022, problema 2 (banco E13): área proyectada 232,34 mm² (sale de MEDIR la cara de partición: bloque − 232,34); F = 16,26 kN por pieza | ej71_molde_hisopo |
+| 43 | principal | `43_gancho_bayer` | Gancho de encastre de espesor variable (h 3,28 → 1,64, l 19, b 9,5, PC E 1 815 N/mm²): flecha con 32,5 N en CATIA (GSA) y por Castigliano | Bayer, «Snap-Fit Joints for Plastics», ejemplo I pág. 16 (banco E7): y = 2,4 mm con P = 32,5 N | ej68_gancho_bayer |
+| 44 | CATA | `44_perno_diamante` | Perno diamante: círculo d cortado por la franja de ancho W (x entre −W/2 y W/2); choque exacto con el agujero corrido 0,15 / 0,20 y el gemelo redondo | Joshi, «Jigs and Fixtures», ej. 2.1: d = 2·√(D²/4 − V·W − V²) = 55,538 (D 55,55, V 0,15, W 2) | ej67_perno_diamante |
+| 45 | principal | `45_ajuste_contraccion` | Ajuste por contracción de dos anillos de aluminio en GSA (un cuarto con simetrías; presión publicada en la interfaz) | MIT 2.008, examen práctico 1 de 2023, problema 4 (banco E17): interferencia 0,18 mm; presión 2,80e7 Pa; F 83,1 kN | ej75_ajuste_contraccion |
+| 46 | CATA | `46_molde_termoformado` | Molde macho de termoformado 254 × 304,8 × 50,8 mm: caras formadas y huella medidas en CATIA; después con desmoldeo de 4° | RapidMade (17/11/2025, banco E18): área formada 208 pulg², huella 120 pulg², relación 1,733, chapa de partida 0,173 pulg | ej69_molde_termoformado |
+| 47 | principal | `47_molde_hisopo_completo` | El molde del 42 con bebedero, canal, compuerta y pines expulsores | MIT 2.008 2022, solución (a): la colada es UN sólido que llega a la cara de arriba; cada expulsor toca la pieza y vive en la mitad de abajo (gemelo: canal corto = dos sólidos) | ej72_molde_hisopo_completo |
+
 ## Lo que sigue, en este orden (Fak, 24/10/2026 a la mañana)
 
 *"quiero que hagas todos los ejercicios oficiales de catia no? y luego diseños reales"*; *"te decía diseños reales de
@@ -140,3 +159,15 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 33 | hecho (CATA) | CATA, R21, 24/10/2026 12:10 (`33_final2`, código del commit; la primera 11:49, igual): ok true; la copia verificada (sha256 fb74d977…4e1e) de v14_choque/panel_marco_local.step: CATIA 91 770,060 mm³ / 96 035,359 mm² contra OpenCASCADE fino (eps 1e-6) 91 766,750 / 96 034,395 (+0,0036 % / +0,0010 %, centro 0,0036 mm); el STEP de CATIA 1 sólido, 0 caras sueltas, −0,0040 %. Los 91 765,561 / 91 791,099 de la fila son de two_wireless.stp, no de esta copia (build123d por defecto: 91 767,169). Hallazgo: medir_b123d sin eps sobre el STEP de CATIA da −0,052 % y el centro 0,058 mm corrido (LECCIONES.md 2); revisor Fable: sin graves | (este commit) |
 | 34 | pendiente | | |
 | 35 | hecho (CATA) | CATA, R21, 24/10/2026 12:17 (`35_final`, código del commit; la primera 12:00, igual): ok true; bloque 170 × 58 × 19 (187 340) menos el panel verificado del 33 pegado sin vínculo: nido 171 459,136 mm³ = la práctica del 19/10; OpenCASCADE −0,0012 %; choque_exacto.py «toca (luz 0)» (intersección 0 con los tres fuzz, distancia 0). Hallazgo: el nido son 5 sólidos (el bloque + 4 islas de 18,16 mm³ que el panel encierra), informado y no decide. Revisor Sonnet: un grave (la ruta de choque_exacto.py desde el paquete del obrero), arreglado y corrido de nuevo | (este commit) |
+| 36 | pendiente | | |
+| 37 | pendiente | | |
+| 38 | pendiente | | |
+| 39 | pendiente | | |
+| 40 | pendiente | | |
+| 41 | pendiente | | |
+| 42 | pendiente | | |
+| 43 | pendiente | | |
+| 44 | pendiente | | |
+| 45 | pendiente | | |
+| 46 | pendiente | | |
+| 47 | pendiente | | |
