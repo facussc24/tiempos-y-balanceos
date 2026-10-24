@@ -5,9 +5,11 @@
                                                                   parte (el .json del conjunto dice cuales); si no hay
                                                                   .json, cada .step de la carpeta
     python -I medir_b123d.py step <archivo.stp> [...]             mide esos STEP (los que exporto CATIA)
+    python -I medir_b123d.py stl <archivo.stl> [...]              volumen con signo de cada STL (trimesh) y si cierra
 
-Ultima linea de la salida: un JSON {"partes": {parte: {"volumen", "cdg_mm", "solidos"}}, "seg"}. Volumen en mm3 y
-centro de gravedad en mm (promedio de los centros de cada solido pesado por su volumen).
+Ultima linea de la salida: un JSON {"partes": {parte: {"volumen", "cdg_mm", "solidos", "area", "cascaras",
+"caras_sueltas"}}, "seg"} (con stl: {"volumen_stl", "cerrado", "triangulos"}). Area en mm2, volumen en mm3 y centro de
+gravedad en mm (promedio de los centros de cada solido pesado por su volumen).
 """
 import json
 import os
@@ -27,7 +29,20 @@ def medir(ruta):
         c = s.center(CenterOf.MASS)
         for i, x in enumerate((c.X, c.Y, c.Z)):
             cdg[i] += x * v / total
-    return {"volumen": round(total, 3), "cdg_mm": [round(x, 4) for x in cdg], "solidos": len(solidos)}
+    # 24/10/2026, ejercicio 09 (superficies): el area de la piel, y cascaras y caras sueltas del archivo (CATIA exporta lo
+    # visible: con las superficies de construccion a la vista el STEP trae el solido Y cascaras sueltas, y solids() sigue
+    # dando 1; NOTAS 19/10: «8 cascaras sueltas (968 caras)»)
+    return {"volumen": round(total, 3), "cdg_mm": [round(x, 4) for x in cdg], "solidos": len(solidos),
+            "area": round(sum(s.area for s in solidos), 3), "cascaras": len(forma.shells()),
+            "caras_sueltas": len(forma.faces()) - sum(len(s.faces()) for s in solidos)}
+
+
+def medir_stl(ruta):
+    """Volumen de la malla con signo (trimesh): un solido de CATIA con las caras hacia adentro tiene el volumen B-Rep
+    bien y el STL RESTA esa parte (NOTAS 19/10, v16: 85 849,6 contra 89 278); el control es este numero contra el de CATIA."""
+    import trimesh
+    m = trimesh.load(ruta, force="mesh")
+    return {"volumen_stl": round(float(m.volume), 3), "cerrado": bool(m.is_watertight), "triangulos": len(m.faces)}
 
 
 def partes_del_conjunto(carpeta):
@@ -56,6 +71,17 @@ def main():
         rutas = partes_del_conjunto(carpeta)
     elif len(sys.argv) >= 3 and sys.argv[1] == "step":
         rutas = {os.path.splitext(os.path.basename(a))[0]: os.path.abspath(a) for a in sys.argv[2:]}
+    elif len(sys.argv) >= 3 and sys.argv[1] == "stl":
+        out = {"partes": {}}
+        for a in sys.argv[2:]:
+            k = os.path.splitext(os.path.basename(a))[0]
+            try:
+                out["partes"][k] = {**medir_stl(a), "archivo": os.path.abspath(a)}
+            except Exception as e:  # noqa: BLE001
+                out["partes"][k] = {"error": repr(e)[:300], "archivo": os.path.abspath(a)}
+        out["seg"] = round(time.time() - t0, 1)
+        print(json.dumps(out, ensure_ascii=True))
+        return 0
     else:
         print(__doc__, file=sys.stderr)
         return 2

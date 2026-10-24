@@ -1,0 +1,17 @@
+{
+ "usa_catia": true,
+ "descripcion": "Too Tall Toby PPP01-05 Paste Sleeve (ejercicio 15 del banco 3D) hecho por superficies en CATIA (Generative Shape Design): tramo recto con pad, transicion reglada por loft vertice a vertice + Fill + Join + CloseSurface, hueco en un segundo cuerpo restado con Remove; masa contra la guia, area de la piel y volumen contra build123d, STEP con un solido y captura BMP",
+ "banco": "15_ttt_paste_sleeve",
+ "respuesta_conocida": {
+  "que": "masa de la pieza en ABS (volumen de CATIA x 1,02 g/cm3 del rotulo del plano)",
+  "valor": 57.08,
+  "unidad": "g",
+  "tolerancia": 1.0,
+  "fuente": "Guia de build123d, Too Tall Toby PPP01-05 Paste Sleeve (https://build123d.readthedocs.io/en/stable/tttt.html#ttt-ppp0105), texto «Object Mass 57.08 g»; material y tolerancia del rotulo del plano (evals/banco3d/ejercicios/15_ttt_paste_sleeve/tarea.yaml, plano en la nube con su sha256)"
+ },
+ "cruces": {
+  "volumen_y_cdg_build123d": "juez_comun: 0,5 mm3 y 0,01 mm contra bien.py del 15 (55 617,5 mm3)",
+  "area_build123d": "0,01 % contra el area del solido de bien.py del 15, medida con medir_b123d.py",
+  "step_catia": "el STEP que exporta CATIA, leido con build123d, tiene que traer UN solido"
+ }
+}
