@@ -133,19 +133,24 @@ def por_caras(propio, otro, n=5):
             cara = f.wrapped
             umin, umax, vmin, vmax = BRepTools.UVBounds_s(cara)
             sup = BRepAdaptor_Surface(cara)
-            uvs = [((umin + umax) / 2, (vmin + vmax) / 2)]
-            uvs += [(umin + (umax - umin) * (i + 0.5) / n, vmin + (vmax - vmin) * (j + 0.5) / n)
-                    for i in range(n) for j in range(n)]
             dentro = 0
-            for u, v in uvs:
-                if BRepClass_FaceClassifier(cara, gp_Pnt2d(u, v), 1e-7).State() not in (TopAbs_IN, TopAbs_ON):
-                    continue
-                q = sup.Value(u, v)
-                e = BRepExtrema_DistShapeShape(Vertex(q.X(), q.Y(), q.Z()).wrapped, cascara_otra)
-                e.Perform()
-                if not e.IsDone():
-                    return None
-                peor, dentro = max(peor, e.Value()), dentro + 1
+            # una cara angosta (la tapa de un tubo: un anillo de 2 mm) puede no tener ningun punto de la grilla adentro:
+            # se densifica hasta que alguno caiga (24/10, el 55 dejaba 2 caras sin punto con 5 x 5)
+            for m in (n, 15, 41):
+                uvs = [((umin + umax) / 2, (vmin + vmax) / 2)] if m == n else []
+                uvs += [(umin + (umax - umin) * (i + 0.5) / m, vmin + (vmax - vmin) * (j + 0.5) / m)
+                        for i in range(m) for j in range(m)]
+                for u, v in uvs:
+                    if BRepClass_FaceClassifier(cara, gp_Pnt2d(u, v), 1e-7).State() not in (TopAbs_IN, TopAbs_ON):
+                        continue
+                    q = sup.Value(u, v)
+                    e = BRepExtrema_DistShapeShape(Vertex(q.X(), q.Y(), q.Z()).wrapped, cascara_otra)
+                    e.Perform()
+                    if not e.IsDone():
+                        return None
+                    peor, dentro = max(peor, e.Value()), dentro + 1
+                if dentro:
+                    break
             medidos += dentro
             vacias += dentro == 0
         return peor, medidos, vacias
