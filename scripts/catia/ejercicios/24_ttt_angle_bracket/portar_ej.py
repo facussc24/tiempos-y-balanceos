@@ -20,7 +20,8 @@ if p.count("    o = part.OriginElements\n") != 1:
 p = p.replace("    o = part.OriginElements\n", "    o = part.OriginElements\n    ctx = {\"construccion\": []}\n")
 p, n = re.subn(r"^(\s+)(.+)\.InsertHybridShape\((\w+)\)[ \t]*$", r'\1\2.InsertHybridShape(\3)\n\1ctx["construccion"].append(\3)',
                p, flags=re.M)
-ini, fin = p.index("    def final():"), p.index('if __name__ == "__main__":')
+corte = "    def final():" if "    def final():" in p else '    reg.paso("captura"'      # el ej54 no tiene final()
+ini, fin = p.index(corte), p.index('if __name__ == "__main__":')
 p = p[:ini] + f"    ctx.update(doc=doc, part=part, body={cuerpo_var}, sf=sf)\n    return ctx\n\n\n"
 cab = (f"# Origen: {nombre}.py de la practica del 19/10/2026 (C:\\Dev\\_catia_practica de la PC principal, copiado a CATA\n"
        f"# por el PEDIDO PARA CATA 6). Cambios para el ejercicio {num} del banco de CATIA (24/10/2026), nada mas: 1) no importa\n"
@@ -30,6 +31,9 @@ cab = (f"# Origen: {nombre}.py de la practica del 19/10/2026 (C:\\Dev\\_catia_pr
 p = p.replace("# -*- coding: utf-8 -*-\n", "# -*- coding: utf-8 -*-\n" + cab, 1).rstrip() + "\n"
 io.open(os.path.join(dst, "pieza_" + nombre.split("_")[0] + ".py"), "w", encoding="utf-8", newline="\n").write(p)
 
+if not os.path.isfile(os.path.join(src, nombre + "_gemelo.py")):                 # el ej54 no tiene gemelo propio
+    print("ok", nombre, "cuerpo:", cuerpo_var, "construccion:", n, "(sin gemelo)")
+    sys.exit(0)
 g = io.open(os.path.join(src, nombre + "_gemelo.py"), encoding="utf-8").read()
 g = g[:g.index('if __name__ == "__main__":')] + (
     'if __name__ == "__main__":\n    import json\n    import sys\n    r = pieza()\n'

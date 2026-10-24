@@ -135,7 +135,7 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 28 | hecho (CATA) | CATA, R21, 24/10/2026 10:54 (`28_final`): ok true; 797,146 g contra 797,15; gemelo a 0,027 mm³; molde del 24 | (este commit) |
 | 29 | hecho | PC principal, R21, 24/10 11:2x (corrida con el código final): verde contra la guía; el ej de la práctica copiado sin cambios + practica_en_juez.py; revisor Fable: el cierre no era idempotente (bug real, arreglado y corrido de nuevo), la tolerancia de volumen relativa es medida, límites de la tolerancia de la guía anotados | (este commit) |
 | 30 | hecho (CATA) | CATA, R21, 24/10/2026 10:54 (`30_final`): ok true; 307,231 g contra 307,23 (Aluminium pasado a 2 700); gemelo y STEP a 0,000 mm³; molde del 24 | (este commit) |
-| 31 | pendiente | | |
+| 31 | hecho (CATA) | CATA, R21, 24/10/2026 11:28 (`31_final3`, código del commit; la primera 11:13, igual): ok true; chapa de 4 como sólido; 1 027,70 g contra 1 028 ± 10 (Steel con Density 7 800); 0,003 mm³ contra la REFERENCIA de la guía (constante con su fuente, no un gemelo independiente); STEP igual; molde del 24 (con tol_masa_g y volumen_referencia) | (este commit) |
 | 32 | pendiente | | |
 | 33 | pendiente | | |
 | 34 | pendiente | | |

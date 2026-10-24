@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Prueba sin CATIA del ejercicio 24 del banco de CATIA (Too Tall Toby PPP01-04 Angle Bracket, CATA 24/10/2026), que es
-tambien el MOLDE de los 26, 28 y 30 (sus pruebas usan las ayudas de aca).
+tambien el MOLDE de los 26, 28, 30 y 31 (sus pruebas usan las ayudas de aca; la tolerancia de masa es la de cada CFG).
 
 1. Lo que midio CATIA en la R21 de CATA (24/10 10:30, corrida 24_r3) por 7 800 kg/m3 cae a 1 g de la guia (310,00 g) y a
    0,5 mm3 del gemelo; con build123d, el gemelo de la practica da ese volumen.
@@ -28,9 +28,11 @@ sys.path.insert(0, TESTS)
 from test_c_clamp_base_08 import Obj  # noqa: E402
 
 MEDIDO = {"24_ttt_angle_bracket": (39743.209, 39743.338), "26_ttt_tie_plate": (434238.267, 434238.267),   # (CATIA,
-          "28_ttt_bearing_bracket": (102198.223, 102198.244), "30_ttt_corner_tie": (113789.264, 113789.264)}  # STEP)
+          "28_ttt_bearing_bracket": (102198.223, 102198.244), "30_ttt_corner_tie": (113789.264, 113789.264),  # STEP)
+          "31_ttt_sm_hanger": (131756.352, 131756.352)}            # 31: R21 de CATA, 24/10 11:13 (31_r1)
 GEMELO = {"24_ttt_angle_bracket": 39743.211, "26_ttt_tie_plate": 434238.267, "28_ttt_bearing_bracket": 102198.25,
-          "30_ttt_corner_tie": 113789.264}                        # gemelo_b123d.py de cada carpeta (= la practica)
+          "30_ttt_corner_tie": 113789.264,                        # gemelo_b123d.py de cada carpeta (= la practica)
+          "31_ttt_sm_hanger": 131756.349}                         # 31: la referencia de la guia (no hay gemelo propio)
 
 
 def cargar(carpeta, archivo="catia.py", nombre=None):
@@ -51,7 +53,7 @@ except Exception:  # noqa: BLE001
 def comprobar_cuenta(t, carpeta):
     ej = cargar(carpeta)
     vc, vstep = MEDIDO[carpeta]
-    t.assertLess(abs(vc * ej.CFG["densidad"] * 1e-6 - ej.CFG["masa_g"]), 1.0)
+    t.assertLess(abs(vc * ej.CFG["densidad"] * 1e-6 - ej.CFG["masa_g"]), ej.CFG.get("tol_masa_g", 1.0))
     t.assertLess(abs(vc - GEMELO[carpeta]), 0.5)
     t.assertLess(abs(vstep - vc), 0.5)
     t.assertEqual(ej.CFG["ej"], carpeta)
@@ -91,7 +93,7 @@ def comprobar_juez(t, carpeta):
     cfg = ej.CFG
     t.assertTrue(juez(ej, cfg, salida_medida(cfg), tmp)["ok"])
     mala = salida_medida(cfg)
-    mala["masa_catia_g"] += 2.0
+    mala["masa_catia_g"] += cfg.get("tol_masa_g", 1.0) + 1.0
     t.assertFalse(juez(ej, cfg, mala, tmp)["ok"])
     sin = salida_medida(cfg)
     sin.pop("masa_catia_g")

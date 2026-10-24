@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """Ejercicio 24 del banco de CATIA (COLA_CATIA.md, 24/10/2026, CATA): Too Tall Toby PPP01-04 «Angle Bracket» (guia de
 build123d, https://build123d.readthedocs.io/en/stable/tttt.html, libre para uso educativo) en CATIA, con la masa contra
-la de la guia: 310,00 g en acero de 7 800 kg/m3. Es tambien el MOLDE de los ejercicios 26, 28 y 30 (Tie Plate, Bearing
-Bracket, Corner Tie): cada uno define su CFG y llama a correr(CFG) de este archivo.
+la de la guia: 310,00 g en acero de 7 800 kg/m3. Es tambien el MOLDE de los ejercicios 26, 28, 30 y 31 (Tie Plate, Bearing
+Bracket, Corner Tie, SM Hanger): cada uno define su CFG y llama a correr(CFG) de este archivo. La CFG puede traer
+tol_masa_g (si la guia da otra tolerancia: el 31, +-10 g) y volumen_referencia (un numero con su fuente cuando no hay
+gemelo propio: el 31; salida.json lo dice en fuente_gemelo).
 
 Molde (las piezas de afuera ya resueltas en la practica del 19/10, sin bien.py en el banco 3D): la pieza la arma
 pieza_ejNN.py (el ejNN de la practica, que dio la respuesta de la guia, copiado POR SCRIPT con cambios minimos anotados
@@ -68,7 +70,10 @@ def construir_con(cfg):
 
 
 def gemelo(cfg, correr=subprocess.run):
-    """Volumen del gemelo de build123d de la practica (la pieza entera), con .venv-cad."""
+    """Volumen del gemelo de build123d de la practica (la pieza entera), con .venv-cad. Si la CFG trae volumen_referencia
+    (el 31: la referencia de la guia, codigo de terceros que no entra al repo), se usa ese numero con su fuente."""
+    if cfg.get("volumen_referencia") is not None:
+        return {"volumen": cfg["volumen_referencia"], "fuente": cfg.get("fuente_referencia")}
     if not os.path.isfile(jc.VENV_CAD):
         return {"error": f"no esta el entorno CAD ({jc.VENV_CAD})"}
     try:
@@ -96,7 +101,7 @@ def cerrar_con_respuesta(carpeta, cfg, medir_gemelo=None):
     elif vc is not None:                          # revisor: con «elif vc» un 0,0 se salteaba en silencio
         juez.update({"masa_catia_g": masa, "dif_guia_g": round(masa - cfg["masa_g"], 3),
                      "densidad_implicita_kg_m3": round(masa / vc * 1e6, 3)})
-        if abs(juez["dif_guia_g"]) > TOL_MASA_G:
+        if abs(juez["dif_guia_g"]) > cfg.get("tol_masa_g", TOL_MASA_G):     # la guia del 31 dice +-10 g
             problemas.append(f"{masa} g contra {cfg['masa_g']} de la guia")
         if abs(juez["densidad_implicita_kg_m3"] - cfg["densidad"]) > TOL_COHERENCIA * cfg["densidad"]:
             problemas.append(f"masa sin coherencia con el volumen ({juez['densidad_implicita_kg_m3']})")
@@ -104,7 +109,8 @@ def cerrar_con_respuesta(carpeta, cfg, medir_gemelo=None):
     if "error" in g:
         problemas.append(g["error"])
     elif vc is not None:
-        juez.update({"volumen_gemelo": g["volumen"], "dif_gemelo_mm3": round(vc - g["volumen"], 3)})
+        juez.update({"volumen_gemelo": g["volumen"], "dif_gemelo_mm3": round(vc - g["volumen"], 3),
+                     "fuente_gemelo": g.get("fuente") or "gemelo_b123d.py corrido en esta corrida"})   # revisor del 31
         if abs(juez["dif_gemelo_mm3"]) > TOL_VOL:
             problemas.append(f"CATIA {vc} contra el gemelo {g['volumen']} mm3")
     vs = s.get("volumen_step_catia_en_build123d")      # si build123d no midio, juez_comun deja un texto

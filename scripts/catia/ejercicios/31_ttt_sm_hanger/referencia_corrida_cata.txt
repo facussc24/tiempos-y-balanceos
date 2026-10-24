@@ -1,0 +1,4 @@
+Corrida de referencia.py de la practica (la de la guia de build123d, codigo de terceros que no entra al repo) en CATA,
+24/10/2026 11:25, con .venv-cad (build123d 0.11.1). El export a STEP falla por su ruta fija (C:\Dev\_catia_practica no existe aca);
+el volumen se imprime antes. Salida:
+vol 131756.349  masa 1027.70 g (publicada 1028 +/- 10)  solidos 1  caja bbox: -117.40341194435948 <= x <= 117.40341194435948, -56.2600001 <= y <= 56.2600001, -1e-07 <= z <= 88.0

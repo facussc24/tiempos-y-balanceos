@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Too Tall Toby 23-02-02 SM Hanger (chapa de 4) como SOLIDO en CATIA (la R21 no tiene la biblioteca de chapa por COM): pieza del ej54 de la practica del 19/10 copiada por portar_ej.py, con sus perfiles en ej54_sm_hanger/*.json; masa de CATIA (Steel con Density 7800) contra la guia, volumen contra la referencia de la guia y STEP medido con build123d; molde: el catia.py del 24",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "masa de la pieza con 7800 kg/m3",
+  "valor": 1028.0,
+  "unidad": "g",
+  "tolerancia": 10.0,
+  "fuente": "guia de build123d, https://build123d.readthedocs.io/en/stable/tttt.html (Too Tall Toby 23-02-02 SM Hanger, 1028 g +-10; densidad 7800 kg/m3 del codigo de referencia de la guia, que no nombra el material: «acero» es inferencia); referencia corrida en la PC principal el 19/10 y en CATA el 24/10 (referencia_corrida_cata.txt): 131 756,349 mm3 = 1 027,70 g"
+ }
+}
