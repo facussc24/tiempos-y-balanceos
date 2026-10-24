@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **24/10 — Un worktree ya fundido se saca DESPUÉS de mirar si tiene un enlace adentro (`find -type l`): `git worktree remove` entra por el enlace `node_modules` que deja un constructor y borra el DESTINO (01:51: 86 paquetes del repo madre; el guardián V5 lo dice y lo frenó la segunda vez); primero se quita solo el enlace (`[System.IO.Directory]::Delete(enlace, $false)`). Y un asignado que necesita `git pull` en CATA se deja después de que CATA confirme el pull: el obrero toma el ítem antes de que su sesión lea el pedido.**
+
 - **23/10 — Si Fak dice que se va y «frená todo», no se lanza nada más en ese turno y se cierra lo abierto (commit, push, hora terminada): su frase de ese momento le gana a la tanda de 36 h** (*"en 7 minutos me voy y estás lanzando agentes?"*).
 
 - **23/10 — «La parte de abajo» de algo que Fak tiene puesto es la de abajo como se usa, no la del dibujo de cotas: la foto marcada lo cazó antes de cortar.** Memoria `project_dedal_pablo_ferula_v2`.
