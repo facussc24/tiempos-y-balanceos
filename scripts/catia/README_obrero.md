@@ -23,7 +23,7 @@ nube y lee lo que vuelve.
 ## Ciclo
 
 1. Cada 60 s lista `asignados\`, ordena por nombre y toma el primero pendiente de esta PC (de a uno).
-2. RAM libre (psutil si está; si no, `GlobalMemoryStatusEx`): con menos de 3 GB, o si no se pudo medir, espera.
+2. RAM libre (psutil si está; si no, `GlobalMemoryStatusEx`): con menos de 0,8 GB (`--ram-min-gb`; Fak 23/10/2026: «si hay 1 gb libre se hace con eso»; CATA midió 0,9 a 2,0 GB libres), o si no se pudo medir, espera.
 3. Si el ejercicio usa CATIA (`ejercicios\<id>\ejercicio.json` → `usa_catia`, si falta se toma que sí) y hay cualquier
    CATIA abierta (`CNEXT.exe`), no corre: espera a que se cierre. Nunca toca una CATIA que no arrancó la corrida.
 4. Corre `python -u -B ejercicios\<id>\catia.py <trabajo>` con `<trabajo>` = `%LOCALAPPDATA%\obrero_catia\trabajo\<item>__<fecha>__<intento>`

@@ -290,6 +290,35 @@ class Piezas(unittest.TestCase):
         self.assertTrue(catia_base.es_mia([1234], {"pid": 1234, "hora": 7}, hora=lambda p: 7))
         self.assertFalse(catia_base.es_mia([1234], {"pid": 1234, "hora": 7}, hora=lambda p: 8))
 
+    def test_piso_de_ram_por_defecto_es_0_8(self):
+        """PEDIDO 18 de CATA (Fak, 23/10/2026 19:50: «si hay 1 gb libre se hace con eso... luego ajustamos para que no sea tan
+        exigente»). CATA midio 0,9 a 2,0 GB libres con la app abierta y con 1 justo se frenaba: 0,8. Con 3 el doble clic de
+        Fak en Arrancar-obrero.cmd se quedaba en «espero RAM» para siempre."""
+        self.assertEqual(obrero.argumentos([]).ram_min_gb, 0.8)
+        self.assertEqual(obrero.argumentos(["--ram-min-gb", "3"]).ram_min_gb, 3.0)
+
+    def test_cnext_abiertos_con_salida_que_no_es_utf8(self):
+        """CATA 23/10 (002 y 003): tasklist escribe en la pagina de codigos OEM (0xa0 = a con acento en cp850) y el ejercicio
+        corre con PYTHONUTF8=1: text=True sin errors= rompia el hilo lector (UnicodeDecodeError) y se perdia la salida.
+        VERDE: con -X utf8 la lista de pids sale igual. ROJO: un tasklist que falla sigue dando None (no pude mirar)."""
+        import catia_base  # noqa: F401
+        with tempfile.TemporaryDirectory(prefix="cnext-utf8-") as tmp:
+            guion = os.path.join(tmp, "guion.py")
+            with open(guion, "w", encoding="utf-8") as f:
+                f.write("import subprocess, sys\n")
+                f.write("sys.path.insert(0, %r)\n" % CATIA_DIR)
+                f.write("import catia_base\n")
+                f.write("SALIDA = b'INFORMACI\\xa0N: hay tareas\\r\\n\"CNEXT.exe\",\"4321\",\"Console\"\\r\\n'\n")
+                f.write("def falso(cmd, **kw):\n")
+                f.write("    return subprocess.run([sys.executable, '-I', '-c', 'import sys; sys.stdout.buffer.write(%r)' % SALIDA], **kw)\n")
+                f.write("def roto(cmd, **kw):\n")
+                f.write("    return subprocess.run([sys.executable, '-I', '-c', 'import sys; sys.exit(1)'], **kw)\n")
+                f.write("print(catia_base.cnext_abiertos(correr=falso))\n")
+                f.write("print(catia_base.cnext_abiertos(correr=roto))\n")
+            r = subprocess.run([sys.executable, "-X", "utf8", "-I", guion], capture_output=True, text=True, timeout=120)
+            self.assertEqual(r.returncode, 0, r.stderr[-800:])
+            self.assertEqual(r.stdout.split(), ["[4321]", "None"], r.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

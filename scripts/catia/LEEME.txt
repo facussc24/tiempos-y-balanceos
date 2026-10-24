@@ -5,7 +5,7 @@ OBRERO DE CATIA (notebook) - qué es y cómo se usa - 23/10/2026
 4. Cada minuto mira COLA 3D\asignados\ y corre lo que diga <item>-<nombre de esta PC>.txt, de a uno.
 5. Abre su propia CATIA, hace la pieza y la cierra. Si usted tiene una CATIA abierta, no la toca: espera a que la cierre.
 6. Deja todo en COLA 3D\<nombre de esta PC>\: resultado-<item>.txt, STEP y fotos, latido.json y obrero.log.
-7. Con menos de 3 GB de RAM libre no arranca nada: espera. Cada ejercicio tiene 20 minutos como mucho.
+7. Con menos de 0,8 GB de RAM libre no arranca nada: espera (Fak, 23/10/2026: con 1 GB libre se hace; CATA midió 0,9 a 2,0 GB). Cada ejercicio tiene 20 minutos como mucho.
 8. Para pararlo: Ctrl+C en la ventana negra o cerrarla. Para volver a arrancarlo: doble clic otra vez.
 9. La notebook enchufada y sin suspender (Configuración > Sistema > Energía > Suspender: nunca).
 10. Si algo anda mal, las últimas líneas de COLA 3D\<nombre de esta PC>\obrero.log dicen qué pasó.

@@ -3,7 +3,7 @@
 
 Cada 60 s mira `COLA 3D\\asignados\\*-<NOMBRE-PC>.txt` (lo deja la PC principal por la nube). Cada asignado es JSON
 {"item": "...", "ejercicio": "<id>", "instrucciones": "...", "asignado": "<fecha>"}. Toma de a UNO, en orden de nombre,
-los que todavia no tienen `COLA 3D\\<NOMBRE-PC>\\resultado-<item>.txt`; mide la RAM libre (con menos de 3 GB espera);
+los que todavia no tienen `COLA 3D\\<NOMBRE-PC>\\resultado-<item>.txt`; mide la RAM libre (con menos de 0,8 GB espera: Fak 23/10/2026, «si hay 1 gb libre se hace con eso»);
 corre `ejercicios\\<id>\\catia.py <carpeta de trabajo>` con el mismo Python (20 min como mucho) y deja en
 `COLA 3D\\<NOMBRE-PC>\\`: resultado-<item>.txt (JSON), la carpeta <item>\\ con STEP / BMP / PNG, latido.json cada 15 min
 y obrero.log. Nunca renombra ni borra nada de `asignados\\`: escribe SOLO en su carpeta y en su carpeta local.
@@ -547,7 +547,9 @@ def argumentos(argv=None):
                    help="carpeta local de trabajo (fuera de la nube)")
     p.add_argument("--ejercicios", default=os.path.join(AQUI, "ejercicios"))
     p.add_argument("--timeout-seg", type=float, default=1200.0)
-    p.add_argument("--ram-min-gb", type=float, default=3.0)
+    p.add_argument("--ram-min-gb", type=float, default=0.8,
+                   help="GB libres para arrancar un ejercicio. 0,8: Fak 23/10/2026 «si hay 1 gb libre se hace con eso»; "
+                        "CATA midio 0,9 a 2,0 GB libres y con 1 justo se frenaba (PEDIDO 18)")
     p.add_argument("--espera-seg", type=float, default=60.0)
     p.add_argument("--latido-seg", type=float, default=900.0)
     p.add_argument("--edad-min-seg", type=float, default=90.0,

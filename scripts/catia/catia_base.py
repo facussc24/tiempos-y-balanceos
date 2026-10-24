@@ -38,7 +38,7 @@ def cnext_abiertos(correr=subprocess.run):
     (auditor del 17/10, I4, y del 19/10)."""
     try:
         r = correr(["tasklist", "/FI", "IMAGENAME eq CNEXT.exe", "/FO", "CSV", "/NH"],
-                   capture_output=True, text=True, timeout=20)
+                   capture_output=True, text=True, errors="replace", timeout=20)   # tasklist escribe en la pagina OEM (CATA 23/10)
     except (OSError, subprocess.TimeoutExpired):
         return None
     if getattr(r, "returncode", 0) != 0:
@@ -413,7 +413,7 @@ def guardar_pieza(doc, reg, nombre, step=True):
 def medir_step(step):
     """Volumen, area y caja del STEP con build123d (otro motor: cruza lo que dice CATIA)."""
     r = subprocess.run([VENV_CAD, os.path.join(AQUI, "medir_step.py"), step], capture_output=True, text=True,
-                       timeout=300)
+                       encoding="utf-8", errors="replace", timeout=300)
     try:
         return json.loads(r.stdout.strip().splitlines()[-1])
     except (ValueError, IndexError):
