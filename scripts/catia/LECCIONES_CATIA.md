@@ -53,6 +53,13 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
 - **Una prueba que reemplaza una función de un módulo compartido la devuelve en un `finally`** (36, CATA): la suite corre
   en un solo proceso y las pruebas siguientes heredarían el reemplazo; igual con `sys.modules["gemelo"]` (los
   `contornos.py` del 25, 27 y 29 importan OTRO `gemelo`).
+- **Una ficha que resume un papel no es el papel** (42, CATA): el PDF del MIT imprime A = 0,00023234 m² y «16.2 kN»; el
+  «2,32e-4» y el 16,26 de la fila y de la ficha E13 eran resumen y recálculo. Lo mismo en el 46: RapidMade publica 1,73 y
+  0,173 (el 1,733 era el recálculo). El juez cita lo IMPRESO, y la causa de una diferencia no se inventa (CATA había escrito
+  una para el 16,2 que el papel no dice y la sacó; LECCIONES_APRENDIDAS del 24/10).
+- **Una pieza chica no se juzga con la tolerancia de volumen de las grandes** (44, CATA, revisor): con 0,5 mm³ un perno
+  diamante de puntas planas (0,481 mm³ menos) pasaba; la tolerancia se elige por lo que tiene que cazar.
+- **Un docstring con una ruta de Windows (`\.sgc-cache`) da «invalid escape sequence» en Python 3.12** (CATA): `r"""`.
 - **El PDF oficial del CSWA no carga desde solidworks.com** (36): la copia de web.archive.org sí, y en la nube de
   Ingeniería está `4- MANUALES\CATIA V5\EJERCICIOS CERTIFICACION\EDU_CSWA_Sample_Exam_2013_ENG.pdf` (respuestas en la
   pág. 9, impresa 313).
