@@ -388,6 +388,63 @@ class Piezas(unittest.TestCase):
         self.assertTrue(a.startswith(os.path.join(env["LOCALAPPDATA"], "obrero_catia")))
         self.assertTrue(a.endswith(".lock"))
 
+    def test_captura_bmp_del_04_con_un_visor_falso(self):
+        """PEDIDO 21 de CATA (23/10/2026 22:40): captura_bmp llamaba a cb.exigir_archivo sin tener cb (NameError en las dos
+        piezas del 004, con CATIA andando bien). Con un visor falso: VERDE si el visor deja el archivo; ROJO (RuntimeError, no
+        NameError) si el visor dice que capturo y no dejo nada, que es lo que CATIA hace en %LOCALAPPDATA%."""
+        import importlib.util
+        import catia_base
+        ruta = os.path.join(EJERCICIOS, "04_nido_holgura", "catia.py")
+        spec = importlib.util.spec_from_file_location("ej04_catia", ruta)
+        ej = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ej)
+
+        class Visor:
+            def __init__(self, escribe):
+                self.escribe = escribe
+
+            def PutBackgroundColor(self, *_):
+                pass
+
+            def Reframe(self):
+                pass
+
+            def Update(self):
+                pass
+
+            def CaptureToFile(self, fmt, ruta):
+                if self.escribe:
+                    with open(ruta, "wb") as f:
+                        f.write(b"BM" + b"\x00" * 100)
+
+            class Viewpoint3D:
+                @staticmethod
+                def PutSightDirection(*_):
+                    pass
+
+                @staticmethod
+                def PutUpDirection(*_):
+                    pass
+
+        class Ventana:
+            def __init__(self, visor):
+                self.ActiveViewer = visor
+                self.Layout = 0
+
+        class Catia:
+            def __init__(self, visor):
+                self.ActiveWindow = Ventana(visor)
+
+        with tempfile.TemporaryDirectory(prefix="captura04-") as tmp:
+            r = ej.captura_bmp(catia_base, Catia(Visor(True)), tmp, "pieza")
+            self.assertTrue(os.path.isfile(r) and os.path.getsize(r) > 0)
+            with self.assertRaises(RuntimeError) as cm:
+                ej.captura_bmp(catia_base, Catia(Visor(False)), tmp, "nido")
+            self.assertIn("captura BMP", str(cm.exception))
+        # y las llamadas del ejercicio le pasan cb (lo que faltaba el 23/10)
+        texto = open(ruta, encoding="utf-8").read()
+        self.assertEqual(texto.count("captura_bmp(cb, "), 3)      # la def y las dos llamadas
+
 
 if __name__ == "__main__":
     unittest.main()

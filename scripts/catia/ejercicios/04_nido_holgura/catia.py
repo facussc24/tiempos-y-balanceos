@@ -82,7 +82,7 @@ def pad_hacia_arriba(cb, doc, part, body, pad, cdg_z_esperado):
     return m
 
 
-def captura_bmp(c, carpeta, nombre):
+def captura_bmp(cb, c, carpeta, nombre):
     """Como catia_base.captura pero deja el BMP (la notebook no tiene Pillow para pasarlo a PNG)."""
     try:
         c.ActiveWindow.Layout = 1           # solo la geometria, sin el arbol
@@ -139,7 +139,7 @@ def hacer_nido(cb, c, reg, out):
     rutas = reg.paso("nido: guardar CATPart + STEP", lambda: cb.guardar_pieza(doc, reg, "nido_holgura_nido"))
     if rutas:
         out["archivos"].append(os.path.relpath(rutas["step"], out["_carpeta"]))
-    bmp = reg.paso("nido: captura BMP", lambda: captura_bmp(c, reg.carpeta, "nido_holgura_nido"))
+    bmp = reg.paso("nido: captura BMP", lambda: captura_bmp(cb, c, reg.carpeta, "nido_holgura_nido"))
     if bmp:
         out["archivos"].append(os.path.relpath(bmp, out["_carpeta"]))
 
@@ -165,7 +165,7 @@ def hacer_pieza(cb, c, reg, out):
     rutas = reg.paso("pieza: guardar CATPart + STEP", lambda: cb.guardar_pieza(doc, reg, "nido_holgura_pieza"))
     if rutas:
         out["archivos"].append(os.path.relpath(rutas["step"], out["_carpeta"]))
-    bmp = reg.paso("pieza: captura BMP", lambda: captura_bmp(c, reg.carpeta, "nido_holgura_pieza"))
+    bmp = reg.paso("pieza: captura BMP", lambda: captura_bmp(cb, c, reg.carpeta, "nido_holgura_pieza"))
     if bmp:
         out["archivos"].append(os.path.relpath(bmp, out["_carpeta"]))
 
