@@ -17,8 +17,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { crearCliente, esperarLote, usd, ErrorApi } from './_lib/claudeApi.mjs';
-import { mandarLote, recogerGuardado } from './_lib/apiLotesBatch.mjs';
+import { mandarLote, recogerGuardado, avisosNuevosDelFreno } from './_lib/apiLotesBatch.mjs';
 import { EFFORTS } from './_apiTarea.mjs';
+
+// el aviso del 60 / 85 % del freno del ciclo que deja cada hijo: se muestra UNA vez por corrida (antes se perdia si el hijo salia bien)
+const avisosVistos = new Set();
+const mostrarAvisos = (out) => { for (const a of avisosNuevosDelFreno(out, avisosVistos)) console.log(a); };
 
 const RAIZ = 'C:/Dev/BarackMercosul';
 const args = process.argv.slice(2);
@@ -106,6 +110,7 @@ function correr(job) {
     p.stdout.on('data', (d) => { out += d; });
     p.stderr.on('data', (d) => { out += d; });
     p.on('close', (code) => {
+      mostrarAvisos(out);
       const costo = (out.match(/costo real \$([\d,.]+)/) || [])[1] || '?';
       console.log(`${job.tarea}: exit ${code} · ${Math.round((Date.now() - t0) / 1000)} s · $${costo} · ${fs.existsSync(salida) ? fs.statSync(salida).size + ' bytes' : 'SIN SALIDA'}${/CORTADA por max_tokens/.test(out) ? ' · ⚠ CORTADA' : ''}`);
       if (code !== 0) console.log('   ' + out.trim().split('\n').slice(-3).join(' | ').slice(0, 400));
@@ -147,6 +152,6 @@ if (cfg.sintesis && paraSintesis.length) {
   const t0 = Date.now();
   const p = spawn('node', a, { cwd: RAIZ, stdio: ['ignore', 'pipe', 'pipe'] });
   let out = ''; p.stdout.on('data', (d) => { out += d; }); p.stderr.on('data', (d) => { out += d; });
-  await new Promise((r) => p.on('close', (code) => { console.log(`síntesis ${s.tarea}: exit ${code} · ${Math.round((Date.now() - t0) / 1000)} s · ${out.trim().split('\n').pop()}`); r(); }));
+  await new Promise((r) => p.on('close', (code) => { mostrarAvisos(out); console.log(`síntesis ${s.tarea}: exit ${code} · ${Math.round((Date.now() - t0) / 1000)} s · ${out.trim().split('\n').pop()}`); r(); }));
 }
 console.log('FIN');

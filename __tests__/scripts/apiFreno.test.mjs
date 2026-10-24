@@ -17,6 +17,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import * as A from '../../scripts/_lib/claudeApi.mjs';
 import { consumirPermiso } from '../../scripts/_lib/escrituraSegura.mjs';
 import { correrAgente, clienteGuion, ejecutorSeco, registroEnMemoria, usoDe } from '../../scripts/_lib/agenteApi.mjs';
+import * as B from '../../scripts/_lib/apiLotesBatch.mjs';
 import { canonPermisos, permisosQueArma } from '../../scripts/_lib/permisoUnUso.mjs';
 
 const CLAVE_PRINCIPAL = 'sk-ant-prueba-PRINCIPAL-0001-abcdefgh';
@@ -267,6 +268,25 @@ describe('aviso al 60 y al 85 %: una linea, una vez por proceso', () => {
     expect(avisos).toHaveLength(2);
     expect(avisos[1]).toMatch(/va por el 88 %/);
     expect(doble.pedidos).toHaveLength(5);   // avisar no frena
+  });
+
+  it('_apiLotes sin --lote (un _apiTarea por job): el aviso de los hijos se muestra UNA vez por corrida, aunque salgan bien', async () => {
+    // el aviso real que escribe el freno, para que el contrato entre los dos lados no se desarme
+    ledger([fila('2026-10-10 10:00:00', 104, 'principal')]);
+    await pedir(cliente(CLAVE_PRINCIPAL, fetchDoble()));
+    const real = avisos[0];
+    expect(real).toMatch(B.RE_AVISO_TOPE);
+    const vistos = new Set();
+    const hijo = (aviso) => `prueba: claude-opus-5-5 high · entrada 1.000 tokens\n${aviso ? `${aviso}\n` : ''}Respuesta guardada en x.md · costo real $0,10`;
+    expect(B.avisosNuevosDelFreno(hijo(real), vistos)).toEqual([real]);
+    expect(B.avisosNuevosDelFreno(hijo(real.replace('61 %', '62 %')), vistos)).toEqual([]);   // otro hijo, mismo umbral
+    expect(B.avisosNuevosDelFreno(hijo(null), vistos)).toEqual([]);                            // sin aviso, nada
+    const a85 = real.replace('61 %', '86 %');
+    expect(B.avisosNuevosDelFreno(hijo(a85), vistos)).toEqual([a85]);                          // el 85 se avisa aparte
+    expect(B.avisosNuevosDelFreno(hijo(a85), vistos)).toEqual([]);
+    // otra clave es otro aviso; una linea del freno que frena no es un aviso
+    expect(B.avisosNuevosDelFreno(hijo(real.replace('clave principal', 'clave prestada-20261020')), vistos)).toHaveLength(1);
+    expect(B.avisosNuevosDelFreno('Fallo: tope del ciclo cruzado: US$ 171,00 de 170,00 para la clave principal; se renueva el 30/10/2026', new Set())).toEqual([]);
   });
 
   it('si arranca ya pasado el 85 %, avisa una sola linea (no la del 60 despues)', async () => {
