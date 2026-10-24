@@ -145,6 +145,7 @@ calcula al escribir la fila (lección del 54; script de la principal, 24/10).
 | N | Quién | Qué | Por qué | Cómo |
 |---|---|---|---|---|
 | T1 | principal | `juez_comun.comparar` (los ejercicios con `bien.py`: 03 a 12, 14, 15, 16, 20, 21) exige la topología del STEP de cada parte | El auditor de CATA (PEDIDO 31): esos jueces dan verde con una cara suelta en el STEP; los de fórmula ya la exigen | Primero MEDIR la topología de la última corrida de cada uno (en esta PC no están: corrieron en CATA o en la práctica) y declarar los que tienen varios sólidos a propósito (16 ensamble, 35 nido, 44); recién ahí el cambio en `comparar`, con su prueba en las dos direcciones y el auditor (cambio mediano, `codigo-madre.md`). Y que cuente también curvas y puntos sueltos (`topologia_step.py` del 54; agregado de CATA a las 16:43: hoy un STEP con una curva de construcción visible da 1/1/0). Medido por CATA a las 16:50 (PEDIDO 32, topologia_step.py): 08 y 10 traen 1 vértice suelto cada uno (darían rojo hasta ocultarlo y volver a correr), 12 y 14 limpios, 16 = 3 sólidos a propósito (ensamble); faltan 03 a 07 |
+| T3 | principal | `compara.py` muestrea también por CARA (grilla UV de cada cara del B-Rep, medida exacta contra la cáscara del otro) y cada ejercicio dice el defecto más chico que tiene que cazar | Revisor Fable del cierre (REVISION_FABLE_METODO_2026-10-24.md, G1, demostrado): un agujero ciego D1 con 2,5 de profundidad en vez de 3 sobre la placa del 58 queda VERDE en toda la cadena (ΔV 0,39 mm³; la malla de 20 000 puntos deja ~2,6 mm² por punto y el fondo no recibe ninguno; la exacta solo recalcula puntos que ya pasaron 0,005). En 55, 57, 58 y 60 la exacta no midió nada | Primero la prueba sin CATIA con ese par como caso que HOY da verde (`revfable/casos_chicos.py` de la sesión del 24/10); después el muestreo por cara; cambio mediano (`codigo-madre.md`): plan, pruebas en las dos direcciones, auditor |
 | T2 | principal | La rosca, el moleteado y la versión de 7 mm del tornillo (fila 52) | PEDIDO 30: no entraba hoy | Como estaba en la fila 52 |
 
 ## Lo que sigue, en este orden (Fak, 24/10/2026 a la mañana)
@@ -154,7 +155,7 @@ algún otro lado que estén las respuestas escritas así tenés una referencia p
 al final"*.
 
 1. **Todos los ejercicios OFICIALES de CATIA** (Dassault): los exámenes de muestra de cada módulo que publiquen la
-   respuesta, más allá del de Part Design que ya está (07). La lista sale de una búsqueda en curso y entra acá como
+   respuesta, más allá del de Part Design que ya está (07). La búsqueda del 24/10 a la mañana (terminada) encontró que Dassault publica UN solo examen de muestra con respuestas, el de Part Design (el Tool Block: 07, 11 y 15); Assembly y Surface Design no tienen. Lo demás de afuera (CSWA, CSWP, Too Tall Toby) entró como
    filas 18 en adelante, con el mismo reparto (impares principal, pares CATA).
 2. **Piezas COMPLEJAS de afuera con la respuesta ESCRITA** (por ejemplo los Model Mania de SolidWorks, que publican la
    masa de cada etapa; los CSWA/CSWP de muestra; los Too Tall Toby más difíciles): superficies curvas, nervios,

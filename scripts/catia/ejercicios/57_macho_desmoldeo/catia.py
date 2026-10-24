@@ -13,6 +13,9 @@ macho final con el volumen (tol_volumen) y el centro (0,01 mm) del gemelo Y el S
 FORMA: el STEP de CATIA contra el STEP del gemelo con compara.py (sobra y falta <= 1 mm3, distancias exactas <= 0,01 mm).
 Formula cerrada del macho final (revisor del 57): prismatoide - 4 R^2 (tan(phi/2) - phi/2) L, phi = acos(sen^2 4),
 L = 60 raiz(2 sen^2 4 + cos^2 4) / cos 4 -> 1 106 821,5538 (= el gemelo).
+Ojo (revisor Fable del cierre, M2): el gemelo hace el MISMO redondeo que se prueba (fillet de OpenCASCADE), asi que la
+forma es nucleo contra nucleo de la misma operacion; lo que la cruza por otro camino es la formula cerrada, y el R15
+entre dos planos es un cilindro sin esquina de tres, donde los nucleos cierran distinto (leccion del 56).
 Uso: python catia.py <carpeta de trabajo>  ->  salida.json, la CATPart, el STEP y la captura.
 """
 import json

@@ -243,6 +243,11 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
 - **«Distancia exacta 0,0» quiere decir «ningún punto de malla pasó 0,005»**, no una medición de cero (revisor del 60):
   `compara.py` recalcula exacto solo los puntos con distancia de malla mayor a 0,005; un desvío real de 0,008 en una
   punta redonda dio 0,0. Lo que está por debajo de 0,005 lo cazan otros controles (en el 60, los ejes del R3).
+- **Un rasgo de pocos mm² puede no recibir NINGÚN punto de la malla de `compara.py`, y ahí ningún control lo ve**
+  (revisor Fable del cierre, demostrado): un agujero ciego D1 con 2,5 de profundidad en vez de 3 en la placa del 58
+  quedó verde (ΔV 0,39 mm³, centro 1e-5, 1/1/0, exacta 0,0). 20 000 puntos por área son ~2,6 mm² por punto en esa
+  placa y 3,7 en el 57. Hasta que `compara.py` muestree por cara (T3 de la COLA), un ejercicio con rasgos chicos dice
+  cuál es el defecto más chico que caza y lo prueba con su gemelo.
 - **Las cotas derivadas se calculan como las calcula el script** (`derivadas()` de cada `build_gancho*.py`) y la prueba
   las compara con las de build123d (48, 50): si el script cambia, CATIA no queda desincronizada en silencio.
 - **Cajas a lo largo de un mismo eje son UN perfil extruido** (50, CATA): el gancho de Leo en CATIA es un croquis de 16
