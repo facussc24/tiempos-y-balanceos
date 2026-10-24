@@ -111,7 +111,7 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 16 | hecho (CATA) | CATA, R21, 24/10/2026 10:09 (`16_r2`, código del commit): ok true; soporte y palanca dibujados en su sistema y llevados a la pose por 7 restricciones (estado 0): (0; −21; 10) y (0; 0; 80), rotación exacta; conjunto 478 517,325 mm³ y cdg = build123d; gemelo en la misma corrida: con el paralelo en orientación opuesta la barra va a −X | (este commit) |
 | 17 | hecho | PC principal, R21, 24/10 10:36: la pose la da CATIA (revolución + comando, punta exacta en 0, 35, 50 y 60°) y el choque OpenCASCADE sobre los STEP de CATIA (no AddNewIntersect); 12 de 12 chequeos del 06; revisor Fable: sin bugs, robustez aplicada (signo −1 exigido, NbDof solo se anota, la resta del soporte se controla) | (este commit) |
 | 18 | hecho (CATA) | CATA, R21, 24/10/2026 10:15 (`18_r1`): ok true; la pieza paramétrica del ej27 (A..E, X = A/3, Y = B/3 + 10) da las tres respuestas cambiando solo los parámetros: 14 207,340 / 16 490,467 / 15 100,464 g contra 14 207,34 / 16 490,45 / 15 100,47 (masa de CATIA con Steel a 7 700 kg/m³); gemelo build123d a ≤ 0,1 mm³; revisor Fable: 0 graves, huecos de la prueba arreglados | (este commit) |
-| 19 | pendiente | | |
+| 19 | hecho | PC principal, R21, 24/10 10:49: 13 206,387 y 14 208,004 g (papel 13 206,40 y 14 208,00); revisor Fable: citas confirmadas en el PDF (pág. 19, 24, 26, 27); tolerancia bajada a 0,1 g (un chaflán faltante pasaba con 1 g), A..E verificados, el caso sin build123d ya no revienta | (este commit) |
 | 22 | pendiente | | |
 | 23 | pendiente | | |
 | 24 | pendiente | | |

@@ -82,6 +82,13 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   origen; un punto p va a `o + p.x X + p.y Y + p.z Z` (16, CATA, medido; el 17 lo usa para mover la palanca en
   OpenCASCADE).
 
+- **Una pieza paramétrica de la práctica del 19/10 se reusa entera** (18, CATA: `pieza_ej27.py` armada con
+  `portar_ej27.py`, cambios mínimos anotados arriba; 19, principal: el ej28 copiado tal cual) y el contrato del banco va en
+  un `catia.py` aparte. Los redondeos, chaflanes y sentidos elegidos con la primera etapa sobreviven al cambio de
+  parámetros (18: las etapas 2 y 3 cambiando solo A..E; 19: las preguntas 4 y 5).
+- **La masa sale de CATIA con la densidad del papel**: un material del catálogo con su `Density` pasada a la del
+  examen (18, CATA: Steel a 7 700, densidad implícita 7 700,000 en las tres etapas).
+
 ## DMU Kinematics (17, principal)
 
 - **`NbDof` cuenta el grado libre que mueve el comando**: un mecanismo de una revolución y un comando da «1;1;1» y se

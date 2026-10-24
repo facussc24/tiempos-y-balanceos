@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "CSWP Sample Exam 2 de SolidWorks, etapa 2 (preguntas 4 y 5), pieza parametrica en CATIA: el ej28 de la practica del 19/10 copiado sin cambios, corrido dentro del juez; masas de las dos preguntas contra el papel (0,1 g) y el STEP de CATIA contra el volumen de CATIA",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "masa de la pieza con la densidad del examen (0,0077 g/mm3) en las preguntas 4 y 5",
+  "valor": {"4": 13206.40, "5": 14208.00},
+  "unidad": "g",
+  "tolerancia": 0.1,
+  "fuente": "CSWP Sample Exam 2 (SolidWorks), copia de la Universidad de Alberta: https://sites.ualberta.ca/~dnobes/CSWA/CSWP_Material/CSWP_SampleExam_2.pdf, pag. 19 (densidad), 24 y 26 (A..E de cada pregunta), 27 (respuestas)"
+ }
+}
