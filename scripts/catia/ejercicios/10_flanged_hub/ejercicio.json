@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Too Tall Toby PPP01-07 Flanged Hub (guia de build123d) en CATIA Part Design: exterior por Shaft con los cuatro R3 como arcos del croquis, nervio en cuna (3 en el filo, 20 grados) como prisma trapecial en un plano normal al filo y patron circular x3, rebaje con su R3 por Groove, agujero con caja (Hole Type 2) y patron x6, agujero de 20 pasante; aluminio del catalogo con la densidad del rotulo (2700 kg/m3) y masa de CATIA contra la guia; volumen y centro de gravedad contra build123d (bien.py del 16 del banco 3D); STEP y captura BMP",
+ "banco": "16_ttt_flanged_hub",
+ "respuesta_conocida": {
+  "que": "masa de la pieza en aleacion 1060",
+  "valor": 372.99,
+  "unidad": "g",
+  "tolerancia": 1.0,
+  "fuente": "guia de build123d, tttt.html#ttt-ppp0107, texto «Object Mass 372.99 g»; aleacion 1060, 2700 kg/m3 y +-1 g de la lectura del plano (evals/banco3d/ejercicios/16_ttt_flanged_hub/tarea.yaml)"
+ }
+}
