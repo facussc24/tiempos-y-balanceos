@@ -1,0 +1,40 @@
+{
+  "_que_es": "Canon del gate de tornillos: largo de agarre y largo de rosca contra la pila real (gate_tornillos.py; lo corre export_deliverables.py cuando la entrega declara tornillos). Nace de la falla real: el tornillo que no toma la tuerca (hallazgo 4 de la auditoria del virolador del 20/10, M4 de 25 contra brida 4 + placa 15 + arandela 1 + tuerca 4) y las patas M12 en la placa de 15 (P14 de docs/PROPUESTAS_SKILL_3D_2026-10-23.md l.502). Fak, 23/10/2026: gate que corre solo, con test, en modo AVISO 7 dias y despues freno (a Fak le avisa y si confirma pasa).",
+  "version": "2026-10-23.1",
+  "aviso_hasta": "2026-10-30",
+  "_aviso_hasta": "Hasta esta fecha INCLUSIVE el gate avisa (exit 0, AVISO en pantalla y en el manifest) y la entrega sigue. Desde el dia siguiente (31/10/2026) un rojo o un NO MEDIDO frena: gate_tornillos.py sale con 1 (rojo) o 2 (NO MEDIDO) y export_deliverables.py con SystemExit [GATE tornillos] antes de crear la carpeta destino. La fecha sale del reloj de la PC; --hoy o CAD_HOY=AAAA-MM-DD solo valen con CAD_GATE_TEST=1 (los tests). Renglon en scripts/_lib/retiros.data.json (retiros_decididos, cad-design:tornillos-aviso-a-freno).",
+  "frase_minima": 10,
+  "tuerca_impresa_altura_min_D": 1.0,
+  "_tuerca_impresa_altura_min_D": "R2 de .claude/skills/cad-design/reference/ficha-fdm.md l.54: tuerca impresa de altura >= D (Leo, 13/10; la ISO 4032 de acero mide 0,80-0,94 D). Solo para tuerca_impresa: una tuerca de acero de norma no se juzga por altura.",
+  "rosca_en_plastico_D": [1.5, 2.5],
+  "_rosca_en_plastico_D": "R3 de ficha-fdm.md l.55: largo de rosca en plastico 1,5 D (memoria) contra 2,5 D (blog sin norma), NO reconciliado y a medir en la A2L. El gate informa los dos: si la pieza que rosca no tiene 1,5 D de material, rojo (no entra: P14, el M12 en la placa de 15 pide 18); si el tornillo toma menos de 2,5 D, aviso con los dos numeros.",
+  "carga_en_plastico": "rojo",
+  "_carga_en_plastico": "R5 de ficha-fdm.md l.57 y memoria reference_roscas_impresas_3d.md («sacar al plastico del camino de la carga»): con carga_N > 0 la rosca no va en plastico ni en tuerca impresa; va tuerca de acero o inserto metalico.",
+  "pasa_la_tuerca": "entera",
+  "_pasa_la_tuerca": "P14 (l.513): «exige que pase la tuerca entera». Frontera del critico (casos_gates_3c_3f.md, E2): largo = pila verde, pila - 0,1 rojo. Lo que sobresale se mide y se informa.",
+  "sobresale_min_pasos": null,
+  "_sobresale_min_pasos": "TBD (PREGUNTAS_FAK.md 16): el pedido del gate decia «2 pasos que sobresalgan»; no hay fuente abierta en la skill ni en la memoria para ese numero y choca con la frontera del critico. Mientras sea null no se exige: solo se informa cuanto sobresale.",
+  "inserto_holgura_mm": null,
+  "_inserto_holgura_mm": "TBD (PREGUNTAS_FAK.md 17): sin numero con fuente para lo que se le puede descontar al largo del inserto. Mientras sea null el tornillo tiene que tomar el inserto entero (el largo_mm del inserto sale del catalogo y va en el json con su fuente).",
+  "tramo_que_no_toma_mm": null,
+  "_tramo_que_no_toma_mm": "TBD (PREGUNTAS_FAK.md 18): R4 de ficha-fdm.md l.56 dice que los primeros milimetros de una rosca impresa no toman, pero no da el numero («medir en el STEP»). Mientras sea null no se descuenta nada.",
+  "tolerancia_largo_mm": 0.1,
+  "_tolerancia_largo_mm": "Diferencia admitida entre el largo bajo cabeza del json y el medido en el STEP. Es tolerancia de medicion, no de diseno: si difieren mas, el json no habla de ese tornillo y da NO MEDIDO.",
+  "tolerancia_apilado_mm": 0.05,
+  "_tolerancia_apilado_mm": "Luz o solape admitido entre dos piezas apiladas (y entre la cabeza y la primera). Mas que esto: «piezas no apiladas», NO MEDIDO. Es tolerancia de medicion.",
+  "sondas": {"radio_1": "D/2 + 0,6", "radio_2": "0,78 D", "angulos": 4},
+  "_sondas": "La pila se mide con lineas paralelas al eje a dos radios (sobre el eje no hay placas: es el agujero). Medido el 23/10 sobre el M5 real de V/tornillos: a D/2+0,6 = 3,1 la sonda toca la cabeza moleteada y el chaflan de entrada de la tuerca la corta 0,4 mm por lado; a 0,78 D = 3,9 toca la tuerca entera y no la cabeza. Se toma la envolvente de las dos.",
+  "salidas": [
+    "alargar el tornillo (o acortar la pila) hasta que pase la tuerca entera o tome el inserto entero, y volver a correr",
+    "si la rosca va en plastico con carga: tuerca de acero o inserto metalico (R5)",
+    "si Fak lo asume: --acepto-tornillos \"<frase de Fak, 10 caracteres o mas>\" con --workdir (queda en el manifest con fecha, firma del conjunto y los id aceptados; vale para esa firma y esos tornillos)"
+  ],
+  "limites_conocidos": [
+    "El inserto se declara en el json (tipo inserto, largo_mm del catalogo con su fuente); si ademas esta modelado como solido aparte, la pila lo cuenta como una pieza mas.",
+    "La carga solo decide si la rosca puede ir en plastico (R5); no se calcula el arrancamiento de la rosca con el numero de carga_N.",
+    "Los nombres de los solidos salen de las etiquetas del STEP; sin etiqueta el solido se llama solido_N (orden de lectura).",
+    "Con tuerca (tuerca_impresa o tuerca_acero), la tuerca tiene que estar modelada: el gate toma la ultima pieza de la pila como la tuerca. Si no esta en el STEP, la cuenta se hace contra la ultima pieza que haya (declarar pila en el json lo caza: la pila declarada no coincide).",
+    "Entrega de varias piezas: sin campo conjunto en el json, el gate juzga cada pieza y la que no tiene el tornillo da NO MEDIDO (frena desde el 31/10). Con conjunto y ninguna pieza con ese nombre (se renombro el conjunto), NO MEDIDO: nunca verde por silencio.",
+    "El aviso «¿que tornillo va aca?» de la entrega sin tornillos declarados busca por NOMBRE del solido (tornillo, tuerca, inserto, M5...), no por geometria: un agujero roscado sin solido de tornillo no avisa."
+  ]
+}

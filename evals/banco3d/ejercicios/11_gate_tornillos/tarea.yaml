@@ -1,0 +1,40 @@
+id: 11_gate_tornillos
+nombre: Gate de tornillos - el tornillo corto que no llega a pasar la tuerca
+falla_real:
+  cita: "el tornillo que no toma la tuerca (M4 de 25, 22 bajo la cabeza, contra brida 4 + placa 15 + arandela 1 + tuerca 4 = 24)"
+  fecha: 2026-10-20
+  fuente: >-
+    Hallazgo 4 de la auditoria del virolador del 20/10 (V/AUDITORIA_auditor.md, citado en
+    viernes-23-plan-sistema/banco3d-material/casos_gates_3c_3f.md, caso E2) y propuesta P14 de
+    docs/PROPUESTAS_SKILL_3D_2026-10-23.md (l.502). Este ejercicio es el del gate 3e del viernes 23/10
+    (gate_tornillos.py, el mismo que corre export_deliverables.py cuando la entrega declara tornillos): casos E1 a E5
+    de casos_gates_3c_3f.md, escritos por un critico ANTES del gate.
+pedido: >-
+  En la entrega, el gate de tornillos tiene que medir en el STEP del conjunto la pila real que atraviesa cada tornillo
+  (brida, placa, arandela y tuerca, una detras de otra) y frenar el tornillo que no pasa la tuerca entera; el que la
+  pasa tiene que dar verde.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: "conjunto de ensayo armado para el banco con build123d: tornillo de 26 bajo la cabeza contra pila 24, sobresale 2 (medidas de ejemplo, no es un diseno de Barack)"
+  - archivo: mal_1_no_llega_a_la_tuerca.py
+    esperado: rojo
+    falla: "tornillo de 22 bajo la cabeza contra la pila de 24: no pasa la tuerca, faltan 2 mm (la cuenta del hallazgo 4)"
+    nota: "armada para el banco con build123d; la geometria es de ensayo (cilindro con cabeza, placas con agujero), la cuenta es la de la falla real"
+controles:
+  - nombre: gate_tornillos
+    existe: true
+    formato: step
+    opciones: []
+    nota: >-
+      El gate como corre de verdad: gate_tornillos.py --step <conjunto.step> --tornillos <conjunto.tornillos.json>
+      (autotest propio BIEN/MAL antes de juzgar). El json lo escribe la pieza al lado del STEP. El corrector juzga por
+      lo medido (veredicto de la linea JSON), no por el codigo de salida, que hasta el 30/10/2026 es 0 aunque haya
+      rojos (modo aviso). NO MEDIDO sale como error (no cuenta como verde).
+formatos: [step]
+notas: >-
+  Ejercicio nuevo del gate 3e (23/10/2026): NO cuenta para aceptar el gate (el banco congelado del bloque 2 es la vara).
+  Las dos piezas son de ensayo, armadas para el banco. Las piezas reales del M5 y del M4 (make_screw_nut.py, carpeta
+  local C:/Dev/_catia_practica/virolador_auto/tornillos, no versionada) se prueban en
+  .claude/skills/cad-design/scripts/test_gate_tornillos.py (E1 y E2), no aca. Sigue pendiente correr el gate sobre
+  el conjunto real del virolador del 20/10 (no se busco en este bloque).
