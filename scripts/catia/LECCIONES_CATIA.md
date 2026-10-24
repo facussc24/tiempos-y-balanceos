@@ -38,6 +38,22 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   espejado). El 37 compara el centro de cada etapa en CATIA y el del STEP contra el gemelo a 0,01 mm. Desde el 24/10
   `juez_comun` guarda en `step_catia_en_build123d` el centro y la topología del STEP que ya medía (antes solo el volumen).
   Mismo hueco, sin arreglar todavía: `practica_en_juez.cerrar_con_masa` (25, 27, 29) compara solo volumen y masa.
+  CATA llegó a lo mismo en el 36 (el agujero de 14 corrido 3 mm mueve el centro 0,17 mm; la masa, nada) y avisa que sus
+  moldes del 22 y el 24 (26, 28, 30) también juzgan solo masa y volumen.
+- **Un control que figura en un comentario y no en el código no existe** (38, CATA): el ej45 de la práctica decía «control
+  extra: un perfil inclinado» y no lo corría. Corrido: `AddNewRibFromRef` RESPETA el ángulo del perfil (el inclinado
+  4,54987° da área × largo × cos; si lo pusiera normal daría 25 mm³ más). El ángulo exacto (atan del paso), no el
+  redondeado.
+- **El nombre del número es el del papel** (40, CATA): el 0,099 del bloque en V es el error de DESPLAZAMIENTO del eje
+  (ΔY); el de POSICIONAMIENTO de la cota H del mismo ejemplo es 0,189. La fila de la COLA lo llamaba mal (corregida).
+- **Un solucionador se juzga por la POSE** (40, CATA): el eje arranca lejos (z 200) para que un solucionador que no lo mueve
+  dé rojo; un eje del otro lado del vértice también.
+- **Una prueba que reemplaza una función de un módulo compartido la devuelve en un `finally`** (36, CATA): la suite corre
+  en un solo proceso y las pruebas siguientes heredarían el reemplazo; igual con `sys.modules["gemelo"]` (los
+  `contornos.py` del 25, 27 y 29 importan OTRO `gemelo`).
+- **El PDF oficial del CSWA no carga desde solidworks.com** (36): la copia de web.archive.org sí, y en la nube de
+  Ingeniería está `4- MANUALES\CATIA V5\EJERCICIOS CERTIFICACION\EDU_CSWA_Sample_Exam_2013_ENG.pdf` (respuestas en la
+  pág. 9, impresa 313).
 - **Una comparación «malo si |x − y| > tol» deja pasar un NaN** (32, 34, 41, revisores y prueba del 41): `NaN > tol` es
   falso. Se escribe «bien si |x − y| <= tol» y lo demás es rojo; y el `ok` exige además que no haya error del juez (una
   excepción fuera de un paso deja `ok_pasos` en verdadero).
