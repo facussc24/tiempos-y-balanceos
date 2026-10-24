@@ -1,0 +1,69 @@
+# Cola del banco de CATIA — tanda del 24/10/2026 (dos sesiones, una por PC)
+
+Pedido de Fak, 24/10/2026: *"dejar un opus en cada notobok digamos con disnitos ejrecidios no? que esta notobok le pase
+no lo ses examanees y que la otra avance en pararlo juntoa est ay cada tanto se curzen la data y las correcciones no? y
+centralicen"*. Encargos E261024-de9f (principal) y E261024-1e56 (CATA), carpeta `catia-tanda-24-10` de la nube.
+
+**Reparto: los IMPARES los hace la PC principal (DESKTOP-14JG95B); los PARES, CATA.** Nadie toca el ejercicio del otro.
+La principal centraliza: `scripts/catia/LECCIONES_CATIA.md`, la fila de cada ejercicio en `README_obrero.md` y lo que
+cambie de método en la skill `cad-design` (`reference/catia.md`). CATA deja sus lecciones en `LECCIONES.md` adentro de su
+carpeta de ejercicio y no toca el README ni la skill.
+
+## Qué es un ejercicio (el contrato, igual para los dos)
+
+Carpeta `scripts/catia/ejercicios/NN_nombre/` con:
+
+- `catia.py <carpeta de trabajo>`: el contrato de `README_obrero.md` (lee `asignado.json` si está, escribe `salida.json`
+  con `ok`, medidas y `archivos`; sale con 0 / 3 / 4). Se arma con `juez_comun.correr_ejercicio(<id del banco>, construir)`
+  como el 05 y el 07: build123d mide el `bien.py` del banco 3D, CATIA rehace la pieza, y el ok es el cruce (0,5 mm³ y 0,01 mm
+  de centro de gravedad por parte) **más la respuesta del papel** (masa a 1 g, o lo que diga el ejercicio). El nombre de
+  cada parte en CATIA es el del `.step` que escribe el `bien.py` (o se renombra como hace el 07).
+- `ejercicio.json`: `usa_catia`, `descripcion`, `banco` (id del ejercicio del banco 3D que da el cruce) y
+  `respuesta_conocida`: `{"que", "valor", "unidad", "tolerancia", "fuente"}`. **La respuesta sale de un papel** (examen,
+  guía, plano, fórmula de geometría con su nombre): nada inventado. Si para una superficie no hay papel, el juez mide el
+  área y la respuesta la da build123d sobre la misma pieza, y el json lo dice.
+- Un test en `scripts/catia/tests/test_<nombre>.py` que corre SIN CATIA (CATIA falsa como `test_tool_block_07.py`: croquis
+  cerrados, operaciones encadenadas, la cuenta contra el volumen del bien.py, verde y rojo del control).
+- Una corrida real con `salida.json → ok: true` (la ruta y la fecha van en el commit y en la fila del README).
+
+Ciclo por ejercicio: `git pull` → construir → correr en CATIA (principal: `C:\Dev\_catia_env\Scripts\python.exe`, sin otra
+CATIA abierta; CATA: su CATIA 2022 con el Python de `obrero.py`, una pieza por vez) → juez verde → revisor `explorador`
+con un modelo DISTINTO del que construyó (las dos sesiones corren en Opus: el revisor va con `model: fable`) → commit con rutas (solo la carpeta del ejercicio y su test) → push. Los `ej*.py` de la práctica del 19/10
+que se citan viven en `C:\Dev\_catia_practica\` de la PC principal; el método está escrito en `reference/catia.md` de la
+skill (en el repo). Si CATA necesita uno, lo pide por `6- PEDIDOS ENTRE PC (FACUNDO)`.
+
+## La lista
+
+| N | Quién | Carpeta | Qué se construye en CATIA | Papel y respuesta conocida | Cruce build123d | Método ya probado |
+|---|---|---|---|---|---|---|
+| 08 | CATA | `08_c_clamp_base` | Too Tall Toby PPP01-03 C Clamp Base en Part Design: perfil del brazo, R18 de las esquinas de abajo, agujero 5,5 pasante con avellanado 11,2 × 90°, tope del brazo derecho en medio cilindro R8 | Guía de build123d `tttt.html#ttt-ppp0103`: **96,13 g**, aleación 1060, 2 700 kg/m³, ±1 g (`evals/banco3d/ejercicios/14_ttt_c_clamp_base/tarea.yaml`) | `14_ttt_c_clamp_base/bien.py` (sólido `ppp0103`, 35 605,5 mm³) | `catia.md` 19/10 tarde: `croquis.dibujar` + avellanado `AddNewHole` `Type 3`, `HeadAngle 90` (ej33: 96,13 = 96,13) |
+| 09 | principal | `09_paste_sleeve_gsd` | PPP01-05 Paste Sleeve por **superficies (GSD)**: tramo recto 30 (oblonga 51 × 44), transición reglada a 66 × 10 en z 133 por loft vértice a vértice + Fill + Join (`SetDeviation 0,01`, `Invert`) + CloseSurface; hueco (45 × 38 → 60 × 4, pared 3 en el plano horizontal) como segundo cuerpo y Remove | Guía `tttt.html#ttt-ppp0105`: **57,08 g**, ABS 1 020 kg/m³, ±1 g (`15_ttt_paste_sleeve/tarea.yaml`; la lectura (a) de la pared da 56,73 g y es la del bien.py). Además el **área** exterior de CATIA contra build123d sobre el mismo STEP | `15_ttt_paste_sleeve/bien.py` (sólido `ppp0105`, 55 617,5 mm³) | ej29 de la práctica (55 617,524 = build123d 55 617,528); `catia.md` «Superficies» |
+| 10 | CATA | `10_flanged_hub` | PPP01-07 Flanged Hub en Part Design: Shaft escalonado, nervio con Stiffener + CircPattern ×3, 6 agujeros de 6 con caja; techo del rebaje en z 18 (la cota manda sobre el ojo) | Guía `tttt.html#ttt-ppp0107`: **372,99 g**, aleación 1060, 2 700 kg/m³, ±1 g (`16_ttt_flanged_hub/tarea.yaml`) | `16_ttt_flanged_hub/bien.py` (sólido `ppp0107`, 138 144,7 mm³) | ej32 dio 373,51 (el nervio de 20° leído parejo, dicho como dudoso): la geometría se toma de `_flanged_hub.py` del banco, que ya la resolvió |
+| 11 | principal | `11_tool_block_parametrico` | El Tool Block del examen Associate en UN CATPart **paramétrico (Knowledgeware)**: parámetros A, B, C, croquis restringido contra los ejes y fórmulas; con A 81 / B 57 / C 43 es la pregunta 3 y cambiando SOLO los parámetros a 84 / 59 / 45 es la 4; material Steel y masa de CATIA | Láminas 04, 05, 06 y 12 del examen (carpeta en la nube, sha256 en `13_examen_catia_associate/tarea.yaml`): **934,78 g y 1 027,09 g**, ±1 g | `13_examen_catia_associate/bien.py` (q3 118 929,059 y q4 130 673,503 mm³) | ej27 de la práctica (CSWP: parámetros + fórmulas, las 3 respuestas cambiando solo los parámetros); `croquis.py` (`a_eje_V`, `a_eje_H`, `radio`, `CreateDimension`, `CreateFormula`); el 07 para el perfil |
+| 12 | CATA | `12_tool_block_mutantes` | Los tres mutantes del 13 en CATIA (el 07 con la operación salteada): `mal_1` q3 sin el agujero de 14, `mal_2` q5 sin la ranura R41, `mal_3` q6 con el vaciado sin paredes. **El juez tiene que dar ROJO** contra la lámina 12 en los tres (y VERDE el cruce contra el `mal_*.py` correspondiente: CATIA reproduce el modelo) | Lámina 12: 934,78 / 625,00 / 430,39 g; `mal_1`: +52,03 g **a mano** (π·7²·43·0,00786, `tarea.yaml` del 13); `mal_2` 798,54 g y `mal_3` 416,20 g (del modelo, no del examen: lo dice el json) | `13_examen_catia_associate/mal_1_q3_sin_agujero_14.py`, `mal_2_q5_sin_corte_r41.py`, `mal_3_q6_vaciado_sin_paredes.py` | El 07 entero (`catia.py` + `perfil_2d.py`); el banco 3D: «un control sirve si deja pasar la BIEN y frena las MAL» |
+| 13 | principal | `13_superficies_exactas` | **GSD contra fórmulas**: tronco de cono r1 20 / r2 10 / h 30 por revolución y por multi-sección (área lateral), tapas con Fill, Join + CloseSurface (volumen), tubo barrido r 5 sobre un arco R 50 de 90° (Pappus), offset 3 y ThickSurface 2 de un cilindro r 20 h 30, split con un plano | Fórmulas de geometría: π(r1+r2)·s con s = √((r1−r2)²+h²); πr²; πh(r1²+r1·r2+r2²)/3; teorema de Pappus (área de la sección × largo de la guía); 2π·23·30; π(22²−20²)·30; 2π·20·20. Tolerancia 0,01 % | Las mismas piezas en build123d, medidas con `.venv-cad` en la propia carpeta (sin bien.py del banco: el cruce es área y volumen por superficie) | ej51 y ej52 de la práctica (todas a menos de 0,0001 %); `catia.md` «Superficies con respuesta exacta» |
+| 14 | CATA | `14_reglas_knowledgeware` | Las reglas del banco como **controles adentro de la pieza** (`CreateCheck`): el 05 con «R ≥ 1,5 en todas las aristas» y el 04 con «luz 0,2 por lado»; VERDE con la BIEN y ROJO con un mutante de cada uno (05: `mal_1_sin_radio`, `mal_2_radio_0_5`; 04: `mal_1_luz_cero`, `mal_2_luz_1mm`) | `tarea.yaml` del 04 y del 05 (la regla y qué mutante tiene que caer) | `04_nido_holgura/` y `05_canto_vivo/` (bien y mal) | ej17 de la práctica (`CreateCheck("Pared >= 2mm")` en verde y en rojo); los `catia.py` 04 y 05 del juez |
+| 15 | principal | `15_plano_tool_block` | **Drafting** del Tool Block q3 (lámina 04): croquis ACOTADO, vistas frente / planta / lateral + isométrica + corte, `GenerateDimensions`, más una **Clipping View Profile** y una **Breakout View** (las preguntas 1 y 2 del examen), PDF | Lámina 04: los valores de las cotas (81, 57, 43, Ø14, R19, R29, R5, 10°, 29, 24, 19, 32, 7, 5…) tienen que estar entre las cotas generadas; lámina 12: pregunta 1 = b) Clipping View Profile, pregunta 2 = c) Breakout View (las dos vistas existen con su tipo) | `13_examen_catia_associate/bien.py` (q3) para el sólido | ej44 (plano de taller), ej11, ej18 (corte y cotas), `acomodar_cotas.py`; `catia.md` «Plano de taller» |
+| 16 | CATA | `16_palanca_ensamble` | El 06 como **ensamble** (CATProduct): base, soporte y palanca cada una en su CATPart, con restricciones (eje de la palanca coaxial con el del soporte, contacto); pose 0° | `_conjunto.py` del 06: eje en (0, 0, 80) dirección −Y, palanca horizontal hacia +X; el centro de gravedad del conjunto contra build123d (`Analyze.GetGravityCenter` por VBScript) | `06_palanca_0_60/bien.py` (base, soporte, palanca) | ej42 (ensamble bracket + eje: dos coincidencias punto-punto; cdg al milésimo); el `catia.py` 06 del juez |
+| 17 | principal | `17_palanca_dmu` | El 16 con **DMU Kinematics**: junta de revolución, comando de ángulo 0 → 60°; en 0, 30 y 60° la punta de la palanca contra la trigonometría; choque exacto (`AddNewIntersect`, nunca `Clashes`) contra la base de `mal_1` (choca entre ~25 y 45°, libre en 0 y 60) y de `mal_3` (choca a 60); luz de `mal_2` a 50° (15 mm) | `tarea.yaml` del 06 (los tres mutantes dicen dónde chocan y a cuánto pasan; el `_conjunto.py` lo verifica al construir) | `06_palanca_0_60/mal_1_choca_a_35.py`, `mal_2_pellizco_15_a_50.py`, `mal_3_choca_a_60.py` | ej49 (biela-manivela: juntas y comando en UNA macro VBScript, exacta en 6 ángulos); `choque_exacto_en_catia.py`; `catia.md` «DMU» |
+
+Cuando se acaben, la principal agrega (candidatos, sin armar todavía): la piel real de un STEP de cliente (área y espesor
+en CATIA contra build123d, con sha256 en un ejercicio nuevo del banco), los otros Too Tall Toby de la práctica del 19/10
+que todavía no tienen `bien.py` en el banco (Post Cap 43,09 g, Light Cap 211,30 g, Angle Bracket 310,00 g, Tie Plate
+3 387,06 g, Bearing Jig 328,02 g, Bearing Bracket 797,15 g, Corner Tie 307,23 g), y chapa (Sheet Metal, el SM Hanger)
+que por COM en R21 sigue sin probar.
+
+## Estado (lo actualiza cada uno en su fila al hacer el commit)
+
+| N | Estado | Corrida real (PC, fecha, resultado) | Commit |
+|---|---|---|---|
+| 08 | pendiente | | |
+| 09 | pendiente | | |
+| 10 | pendiente | | |
+| 11 | pendiente | | |
+| 12 | pendiente | | |
+| 13 | pendiente | | |
+| 14 | pendiente | | |
+| 15 | pendiente | | |
+| 16 | pendiente | | |
+| 17 | pendiente | | |
