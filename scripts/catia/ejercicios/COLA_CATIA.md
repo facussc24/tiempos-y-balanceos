@@ -87,7 +87,7 @@ mismo contrato; los archivos de cliente NO se copian al repo (se citan con ruta 
 | 34 | principal | Choque EXACTO en CATIA de la v16 contra el panel (y el gemelo subido 1 mm) | OpenCASCADE: v16 sin choque (luz 0,0455); gemelo 69,573 mm³ | ej16_choque_catia_real |
 | 35 | CATA | Nido que copia el panel del cliente (bloque menos el panel) | intersección 0 y distancia ~0 con OpenCASCADE | ej24_nido_cliente |
 
-## Fase 2, segunda tanda (24/10 12:40): piezas de AFUERA con la respuesta ESCRITA
+## Fase 2, segunda tanda (24/10 12:29): piezas de AFUERA con la respuesta ESCRITA
 
 La principal pasa a CATA cada `ej*.py` de la práctica con el `registro.json` de su corrida del 19/10, en `6- PEDIDOS ENTRE PC (FACUNDO)\para CATA - practica 19-10\` (pedido 27). Mismo contrato y mismo reparto. Los de elementos finitos (41, 43, 45) van a la principal: en CATA no se probó si la R21 tiene Generative Structural Analysis por COM. Revisor por ejercicio: Sonnet (LECCIONES 24/10); Fable, al fundir la tanda.
 

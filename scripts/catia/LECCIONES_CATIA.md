@@ -130,6 +130,19 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   decide por 1 sólido y 0 caras sueltas, además del volumen.
 - **Panel del cliente en CATIA** (33): 91 770,060 mm³ y 96 035,359 mm² contra OpenCASCADE fino 91 766,750 / 96 034,395
   (+0,0036 %), centro a 0,0036 mm.
+- **El nido que copia el panel (ej24) no es UNA pieza: son 5 sólidos** (35, CATA, medido): el bloque entero (171 384,489
+  mm³) y cuatro islas de 18,16 mm³ arriba (z −7,78 a −6) que el panel encierra y que quedan sueltas al restarlo. Las NOTAS
+  del 19/10 decían «el panel atraviesa el bloque de lado a lado»: lo medido es otra cosa. Como ejercicio cumple
+  (intersección 0, distancia 0); como nido impreso, las islas no quedarían pegadas a nada. El juez informa la cantidad de
+  sólidos y no decide por ella.
+- **El contacto lo decide la distancia exacta, no el gemelo** (35): el gemelo subido 1 mm solo dice que el control no está
+  ciego en ese sentido. **Y el volumen del bloque no dice DÓNDE está** (corrido 10 mm da el mismo y el mismo «toca»): fija
+  la posición el volumen del nido contra el de la práctica (171 459,136, el mismo en las dos CATIA hasta el último decimal).
+- **El sha256 se calcula sobre la COPIA que abre CATIA**, no sobre el original (35 y 33). **Una ruta a la skill desde un
+  ejercicio va por `jc.REPO`**: el paquete del obrero copia `ejercicios/` y no `.claude/skills` (35, revisor Sonnet).
+- **El obrero corta un ejercicio a los 1 200 s** (`obrero.py --timeout-seg`, por defecto): el tope interno de un post-proceso
+  tiene que quedar por debajo (35: 900 s). El 32 no entra: CATIA más la comparación contra el entregado pasan los 20 min;
+  corre solo en la PC principal, a mano o con `--timeout-seg 3000`.
 
 ## DMU Kinematics (17, principal)
 
