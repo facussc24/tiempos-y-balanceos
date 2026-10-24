@@ -139,7 +139,7 @@ def cerrar_con_referencia(carpeta, gemelo_con=None, comparar_con=None):
     if not _centro_cerca(cc, CDG, jc.TOL_CDG):
         problemas.append(f"centro de CATIA {cc} contra {CDG}")
     if (st.get("solidos"), st.get("cascaras"), st.get("caras_sueltas")) != (1, 1, 0):      # auditor: tambien las cascaras
-        problemas.append(f"el STEP de CATIA tiene {st.get('solidos')} solidos y {st.get('caras_sueltas')} caras sueltas")
+        problemas.append(f"el STEP de CATIA tiene {st.get('solidos')} solidos, {st.get('cascaras')} cascaras y {st.get('caras_sueltas')} caras sueltas")
     paso = os.path.join(carpeta, EJ, PARTE + ".stp")
     g = (gemelo_con or gemelo)(os.path.join(carpeta, "gemelo"), paso)
     s["gemelo"] = g
