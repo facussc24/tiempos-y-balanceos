@@ -1,0 +1,75 @@
+id: 16_ttt_flanged_hub
+nombre: Too Tall Toby PPP01-07 Flanged Hub (guia de build123d) - pieza con su masa
+falla_real:
+  cita: «calentamiento con respuesta conocida, no es una falla de Barack»
+  fecha: 2026-10-24
+  fuente: >-
+    Punto 2f (opcional) de la tanda del viernes 23/10/2026: ejercicios de calentamiento con respuesta conocida. La pieza
+    ya la resolvio la skill cad-design en la practica del 23/10/2026 (bloque 5b): RESUMEN.md y 03_flanged_hub/ de la
+    carpeta practica/ttt (nube de Ingenieria). El esperado de la BIEN sale de la masa que publica la guia, no de una
+    pieza real.
+de_donde_sale:
+  guia: https://build123d.readthedocs.io/en/stable/tttt.html#ttt-ppp0107
+  leida_en_la_practica: >-
+    https://build123d.readthedocs.io/en/latest/tttt.html#ttt-ppp0107 (lectura.md l.3 y RESUMEN.md de la practica; la
+    pagina /en/stable/ no se coteja aca: nada se bajo de internet).
+  ejercicio: «PPP01-07 Flanged Hub», de Too Tall Toby, publicado en la guia de build123d (pagina tttt.html).
+  masa: >-
+    372,99 g: texto «Object Mass 372.99 g» de la pagina (lectura.md l.5). La solucion de codigo de la pagina no se leyo
+    (RESUMEN.md).
+  material: aleacion 1060, 2700 kg/m3 (rotulo del plano, segun lectura.md l.6); tolerancia +-1 g (lectura.md l.5).
+  carpeta: "Ingeniería y Proyecto - General/ASISTENTE INGENIERIA/5- FACUNDO (memoria y configuracion)/viernes-23-plan-sistema/practica/ttt/03_flanged_hub/"
+  sha256:
+    plano_ppp0107.png: 2fd3973d36d66bfc8f84c0f514f96e073225cb3d41624a55281b6346ffc1835a
+    pieza.py: 4e60b80543a9925cc82e735358e3470c1f22ae6b80be80c67e808b2a75397ac2
+    lectura.md: 40a5ac6c83f39e2b8a846dd87dbf9e9459a039641dc27818f136e928942f3bf3
+    resultado.md: d9e0e9ff26cbfdce5d36a43f864b5b565eeb7c2a741d673432f36ac9d030ab9f
+    ../RESUMEN.md: 1472fe60b77f5856c7686d666895e81848c43756aa28d69127fe809d1be80018
+  licencia: >-
+    El plano no esta en el repo (ver LICENSES/NOTICE.md). _flanged_hub.py es el pieza.py de la practica (lectura propia
+    del plano), no el codigo de referencia de la pagina.
+pedido: >-
+  Modelar el Flanged Hub del plano PPP01-07 (MMGS, aleacion 1060, 2700 kg/m3) y que la masa caiga a 1 g o menos de la
+  que publica la guia (372,99 g). Un solo solido, con nombre ppp0107 en el STEP.
+preguntas:
+  ppp0107: {masa_esperada_g: 372.99, densidad_kg_m3: 2700, material: "aleacion 1060", tolerancia_g: 1}
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    masas_esperadas_g: {ppp0107: 372.99}
+    nota: >-
+      El pieza.py de la practica con la misma geometria (mismo volumen, paso por paso, que la tabla de resultado.md:
+      138 144,7 mm3 = 372,991 g); cambia solo la salida (Compound con UN solido con nombre ppp0107) y los pasos que se
+      pueden saltear o agregar. Armada con build123d desde el plano (no hay STEP de la guia).
+  - archivo: mal_1_sin_agujero_20.py
+    esperado: rojo
+    falla: "sin el agujero pasante de 20 del cubo: pesa 401,83 g, 28,84 g de mas"
+    nota: >-
+      A mano: el agujero corta material solo entre el techo del rebaje (z=18) y la cara de arriba del cubo (z=52):
+      pi x 10^2 x 34 = 10 681,4 mm3 x 0,0027 g/mm3 = 28,84 g; es el mismo paso «agujero 20» de la tabla de resultado.md
+      (-10 681,4). El modelo da +10 681,4 mm3.
+  - archivo: mal_2_r3_canto_abajo.py
+    esperado: rojo
+    falla: "un R3 de mas en el canto de abajo de la brida de 130 (lectura.md: canto vivo en la vista de abajo): pesa 370,88 g, 2,11 g de menos"
+    nota: >-
+      Es el mismo fillet convexo que el del canto de arriba de la brida, que en la tabla de resultado.md saca 780,7 mm3
+      (a mano: 1,931 mm2 x 2 pi x radio del baricentro); 780,7 mm3 x 0,0027 g/mm3 = 2,108 g. Los agujeros de 6 y sus
+      cajas no llegan al canto (radios 47,5 a 60,5; el fillet va de 62 a 65). El modelo da -780,7 mm3.
+controles:
+  - nombre: masa_esperada
+    existe: true
+    formato: step
+    opciones: ["--esperado", "ppp0107=372.99", "--tolerancia", "1", "--densidad", "2.70"]
+    nota: >-
+      La masa de --esperado es la de preguntas (la de la guia). Densidad 2,70 g/cm3 = 2700 kg/m3 del rotulo. Tolerancia
+      1 g: la de la practica (lectura.md l.5; unos 370 mm3, 0,27 % del volumen).
+formatos: [step, stl]
+notas: >-
+  Ejes de la pieza: Z = eje del cubo, cara de abajo de la brida en z=0; un nervio sobre +X (seccion A-A). Caja del
+  solido +-65 x +-65 x 0..52 (resultado.md). Cotas de la seccion A-A verificadas en la practica con barrido de pixeles
+  (lectura.md). Supuestos de la lectura (lectura.md, «lo que no se ve»): (1) la cuna de 20 grados del nervio sigue hasta
+  tocar el escalon y el cubo; (2) los fillets van antes de los nervios (los nervios sin fillet propio); (3) canto de
+  abajo de la brida, canto del cubo y bocas de los agujeros sin fillet. Discrepancia ojo contra cota resuelta en la
+  practica (resultado.md): a ojo el techo del rebaje daba 15,5 y la cota dice 18; el barrido dio 18,1 y se uso la cota.
+  Limite del control: la masa no ve un espejo ni dos errores que se compensan; es un control de lectura del plano, no
+  de forma (RESUMEN.md).

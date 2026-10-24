@@ -1,0 +1,89 @@
+id: 15_ttt_paste_sleeve
+nombre: Too Tall Toby PPP01-05 Paste Sleeve (guia de build123d) - pieza con su masa
+falla_real:
+  cita: «calentamiento con respuesta conocida, no es una falla de Barack»
+  fecha: 2026-10-24
+  fuente: >-
+    Punto 2f (opcional) de la tanda del viernes 23/10/2026: ejercicios de calentamiento con respuesta conocida. La pieza
+    ya la resolvio la skill cad-design en la practica del 23/10/2026 (bloque 5b): RESUMEN.md y 02_paste_sleeve/ de la
+    carpeta practica/ttt (nube de Ingenieria). El esperado de la BIEN sale de la masa que publica la guia, no de una
+    pieza real.
+de_donde_sale:
+  guia: https://build123d.readthedocs.io/en/stable/tttt.html#ttt-ppp0105
+  leida_en_la_practica: >-
+    https://build123d.readthedocs.io/en/latest/tttt.html#ttt-ppp0105 (lectura.md l.3 y RESUMEN.md de la practica; la
+    pagina /en/stable/ no se coteja aca: nada se bajo de internet).
+  ejercicio: «PPP01-05 Paste Sleeve», de Too Tall Toby, publicado en la guia de build123d (pagina tttt.html).
+  masa: >-
+    57,08 g: texto «Object Mass 57.08 g» de la pagina (lectura.md l.5). La solucion de codigo de la pagina no se leyo
+    (RESUMEN.md).
+  material: ABS, 1020 kg/m3 (rotulo del plano, segun lectura.md l.6); tolerancia +-1 g (lectura.md l.5).
+  carpeta: "Ingeniería y Proyecto - General/ASISTENTE INGENIERIA/5- FACUNDO (memoria y configuracion)/viernes-23-plan-sistema/practica/ttt/02_paste_sleeve/"
+  sha256:
+    plano_ppp0105.png: 2552322d14dea6f4637365719c90bb0d9a7c41a8dcee4fdbe28a75099f615f66
+    pieza.py: cab8f37d1322f5456ddd163f924b5b43d091dee7ec51daf040a5d1eacea54b78
+    lectura.md: 9414b346b8a89325e89c658813413f2af6d275a6ce9bd4087bb45e491cfd808b
+    resultado.md: 99e6d2bb8bc27dfd6189bc12f237e92bf6223950949668d1824f9cab3634dee9
+    sensibilidad_cascara.py: be46e4f255549ed8a94c7b7fef75542b5ca6008baeeb6f9363934be807b17ef6
+    sensibilidad_salida.txt: 6c36f13151c66e8cbce36178ab87b9d278a56f2b0639dfcdb9d66f35bde2b95e
+    ../RESUMEN.md: 1472fe60b77f5856c7686d666895e81848c43756aa28d69127fe809d1be80018
+  licencia: >-
+    El plano no esta en el repo (ver LICENSES/NOTICE.md). _paste_sleeve.py es el pieza.py de la practica (lectura
+    propia del plano), no el codigo de referencia de la pagina.
+pedido: >-
+  Modelar el Paste Sleeve del plano PPP01-05 (MMGS, ABS, 1020 kg/m3) y que la masa caiga a 1 g o menos de la que
+  publica la guia (57,08 g). Un solo solido, con nombre ppp0105 en el STEP.
+preguntas:
+  ppp0105: {masa_esperada_g: 57.08, densidad_kg_m3: 1020, material: "ABS", tolerancia_g: 1}
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    masas_esperadas_g: {ppp0105: 57.08}
+    nota: >-
+      El pieza.py de la practica con la misma geometria (mismo volumen que resultado.md: 55 617,5 mm3 = 56,730 g, 0,35 g
+      debajo del objetivo, en tolerancia); cambia solo la salida (Compound con UN solido con nombre ppp0105) y los pasos
+      que se pueden saltear. Armada con build123d desde el plano (no hay STEP de la guia). Ver en notas la duda de la
+      pared.
+  - archivo: mal_1_sin_tramo_recto.py
+    esperado: rojo
+    falla: "sin el tramo recto de 30 de abajo («30 LOWER SECTION» sin leer): pesa 43,62 g, 13,46 g de menos que el objetivo (13,11 g de menos que la BIEN)"
+    nota: >-
+      La diferencia con la BIEN sale a mano: (oblonga 51 x 44 - oblonga 45 x 38) x 30 = (1828,5 - 1400,1) x 30 =
+      12 852,6 mm3 x 0,00102 g/mm3 = 13,11 g; sensibilidad_salida.txt de la practica da el mismo tramo recto: 12 852,5
+      mm3. El modelo da -12 852,4 mm3.
+  - archivo: mal_2_boca_abajo_cerrada.py
+    esperado: rojo
+    falla: "la boca de abajo cerrada con un fondo de 3 (lectura.md: los dos extremos abiertos): pesa 61,01 g, 3,93 g de mas que el objetivo (4,28 g de mas que la BIEN)"
+    nota: >-
+      A mano: oblonga 45 x 38 (7 x 38 + pi x 19^2 = 1400,1 mm2) x 3 = 4200,3 mm3 x 0,00102 g/mm3 = 4,284 g. El modelo da
+      +4200,4 mm3.
+  - archivo: mal_3_pared_4.py
+    esperado: rojo
+    falla: "pared de 4 en vez de 3, con las aberturas interiores del plano (crece el exterior): pesa 77,35 g, 20,27 g de mas"
+    nota: >-
+      La masa de este mutante la da el modelo (+20 210,5 mm3), no una cuenta a mano entera. Control parcial a mano del
+      tramo recto: (oblonga 53 x 46 - oblonga 51 x 44) x 30 = (1983,9 - 1828,5) x 30 = 4661 mm3; el resto es el tramo
+      conico.
+controles:
+  - nombre: masa_esperada
+    existe: true
+    formato: step
+    opciones: ["--esperado", "ppp0105=57.08", "--tolerancia", "1", "--densidad", "1.02"]
+    nota: >-
+      La masa de --esperado es la de preguntas (la de la guia). Densidad 1,02 g/cm3 = 1020 kg/m3 del rotulo. Tolerancia
+      1 g: la de la practica (lectura.md l.5).
+formatos: [step, stl]
+notas: >-
+  Ejes de la pieza: Z arriba (boca de 51 x 44 abajo en z=0, boca de 66 x 10 arriba en z=133), X = lado largo de las dos
+  bocas. Seccion oblonga (tramos rectos y semicirculos), no elipse: lo sostiene el barrido de pixeles de la seccion A-A
+  de lectura.md. Las aberturas 45 x 38 y 60 x 4 son interiores (lectura.md: con pared 3, si 60 x 4 fuera exterior el
+  hueco daria -2). DUDA QUE QUEDA ABIERTA (resultado.md y RESUMEN.md, «Que no se pudo verificar»): «3 wall thickness
+  typ» admite dos lecturas en el tramo conico, y no se sabe cual uso el autor. (a) Loft exterior menos loft interior, 3
+  medido en el plano horizontal: 56,73 g (-0,35 g). Es la del pieza.py y la de esta BIEN. (b) Cascara de 3 normal a la
+  superficie (offset Kind.ARC): 57,06 g (-0,02 g), segun sensibilidad_salida.txt. Las dos dan verde con 1 g: el
+  control no las distingue. Se deja la (a) porque es la del pieza.py que dio verde en la practica. La masa con elipse
+  no se calculo (RESUMEN.md). Limite del control, visto en la practica (resultado.md, «Trampa de la libreria»): offset
+  con Kind.INTERSECTION da is_valid=True y un solido roto (las secciones salen llenas) que igual pesa 57,21 g, VERDE con
+  una geometria mala. No entra como mutante porque la masa no lo caza: es justo lo que este control no ve. La masa no
+  prueba la forma; hace falta cortar secciones despues de toda cascara u offset (PROPUESTAS_SKILL_3D.md de la
+  practica).

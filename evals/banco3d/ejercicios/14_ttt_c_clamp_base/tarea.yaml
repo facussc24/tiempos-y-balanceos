@@ -1,0 +1,73 @@
+id: 14_ttt_c_clamp_base
+nombre: Too Tall Toby PPP01-03 C Clamp Base (guia de build123d) - pieza con su masa
+falla_real:
+  cita: «calentamiento con respuesta conocida, no es una falla de Barack»
+  fecha: 2026-10-24
+  fuente: >-
+    Punto 2f (opcional) de la tanda del viernes 23/10/2026: ejercicios de calentamiento con respuesta conocida. La pieza
+    ya la resolvio la skill cad-design en la practica del 23/10/2026 (bloque 5b): RESUMEN.md y 01_c_clamp_base/ de la
+    carpeta practica/ttt (nube de Ingenieria). El esperado de la BIEN sale de la masa que publica la guia, no de una
+    pieza real.
+de_donde_sale:
+  guia: https://build123d.readthedocs.io/en/stable/tttt.html#ttt-ppp0103
+  leida_en_la_practica: >-
+    https://build123d.readthedocs.io/en/latest/tttt.html#ttt-ppp0103 (lectura.md l.3 y RESUMEN.md de la practica; la
+    pagina /en/stable/ no se coteja aca: nada se bajo de internet).
+  ejercicio: «PPP01-03 C Clamp Base», de Too Tall Toby, publicado en la guia de build123d (pagina tttt.html).
+  masa: >-
+    96,13 g: texto «Object Mass 96.13 g» de la pagina (lectura.md l.5), fuera del bloque de codigo. La solucion de
+    codigo de la pagina no se leyo (RESUMEN.md).
+  material: aleacion 1060, 2700 kg/m3, tolerancia +-1 g (rotulo del plano, segun lectura.md l.5-6).
+  carpeta: "Ingeniería y Proyecto - General/ASISTENTE INGENIERIA/5- FACUNDO (memoria y configuracion)/viernes-23-plan-sistema/practica/ttt/01_c_clamp_base/"
+  sha256:
+    plano_ppp0103.png: 97210459dd3f6b5e3aa743b7c89c39f692566adc6583fbcced50442efb319bd5
+    pieza.py: 6fb21811fd2ac78021ec80254d78f1db523de5ffb32534a7414796920b44a5a0
+    lectura.md: 5c82c7223aad02843fb1efa5a24e92363a119df91a0b2b97d6c01bf45956cca2
+    resultado.md: fcb8f3599e59776f2e136ac649429e6000d35ec1d2df918135970ae47f320a39
+    ../RESUMEN.md: 1472fe60b77f5856c7686d666895e81848c43756aa28d69127fe809d1be80018
+  licencia: >-
+    El plano no esta en el repo (ver LICENSES/NOTICE.md). _c_clamp_base.py es el pieza.py de la practica (lectura
+    propia del plano), no el codigo de referencia de la pagina.
+pedido: >-
+  Modelar el C Clamp Base del plano PPP01-03 (MMGS, aleacion 1060, 2700 kg/m3) y que la masa caiga a 1 g o menos de la
+  que publica la guia (96,13 g). Un solo solido, con nombre ppp0103 en el STEP.
+preguntas:
+  ppp0103: {masa_esperada_g: 96.13, densidad_kg_m3: 2700, material: "aleacion 1060", tolerancia_g: 1}
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    masas_esperadas_g: {ppp0103: 96.13}
+    nota: >-
+      El pieza.py de la practica con la misma geometria (mismo volumen que resultado.md: 35 605,5 mm3 = 96,135 g);
+      cambia solo la salida (Compound con UN solido con nombre ppp0103) y los pasos que se pueden saltear. Armada con
+      build123d desde el plano (no hay STEP de la guia).
+  - archivo: mal_1_sin_agujero_5_5.py
+    esperado: rojo
+    falla: "sin el agujero pasante de 5,5 ni su avellanado de 11,2 x 90: pesa 99,02 g, 2,89 g de mas que el objetivo (2,885 g de mas que la BIEN)"
+    nota: >-
+      La diferencia sale a mano con la cuenta de lectura.md: agujero pi x 2,75^2 x 41 = 974,1 mm3 (41 = 23 del tope
+      izquierdo + 18 del brazo derecho) y avellanado (cono truncado de 11,2 a 5,5 en 2,85 menos el cilindro de 5,5)
+      = 94,4 mm3; total 1068,5 mm3 x 0,0027 g/mm3 = 2,885 g. El modelo da +1068,6 mm3.
+  - archivo: mal_2_sin_r18.py
+    esperado: rojo
+    falla: "sin los dos R18 de las esquinas exteriores de abajo (esquinas vivas): pesa 102,14 g, 6,01 g de mas"
+    nota: >-
+      A mano, con el termino de lectura.md: 2 x (1 - pi/4) x 18^2 x 16 = 2225,0 mm3 x 0,0027 g/mm3 = 6,008 g. El
+      modelo da +2225,0 mm3.
+controles:
+  - nombre: masa_esperada
+    existe: true
+    formato: step
+    opciones: ["--esperado", "ppp0103=96.13", "--tolerancia", "1", "--densidad", "2.70"]
+    nota: >-
+      La masa de --esperado es la de preguntas (la de la guia). Densidad 2,70 g/cm3 = 2700 kg/m3 del rotulo. Tolerancia
+      1 g: la del rotulo del plano segun lectura.md, la misma que uso la practica.
+formatos: [step, stl]
+notas: >-
+  Ejes de la pieza: X a lo ancho (cara exterior del brazo izquierdo en x=0), Z arriba (fondo en z=0), Y el espesor
+  (-8..8). Caja del solido -9..95 x -8..8 x 0..42 (resultado.md). Supuestos de la lectura (lectura.md, «lo que no se
+  ve»): (1) el tope del brazo derecho es medio cilindro R8 y no un bloque recto hasta 42; (2) avellanado solo en la
+  cara izquierda, como lo muestra el detalle; (3) no hay otros fillets. Los tres quedan confirmados solo por la masa
+  (+0,005 g), no por una forma de referencia. Limite del control: la masa no ve un espejo ni dos errores que se
+  compensan; es un control de lectura del plano, no de forma (RESUMEN.md: «la masa en tolerancia no prueba la
+  forma»).
