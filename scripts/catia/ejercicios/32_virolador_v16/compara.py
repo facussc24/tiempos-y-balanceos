@@ -81,15 +81,45 @@ rng = np.random.default_rng(0)
 def hasta(src, dst):
     p, _ = trimesh.sample.sample_surface(src, 20000, seed=1)
     _, dist, _ = trimesh.proximity.closest_point(dst, p)
-    return float(dist.max()), float(np.percentile(dist, 99))
+    return float(dist.max()), float(np.percentile(dist, 99)), p, dist
 
 
-ab, ab99 = hasta(A, Bm)
-ba, ba99 = hasta(Bm, A)
+def exacta(puntos, dist, propio, otro, umbral=0.005):
+    """24/10 (ejercicio 49 y su revisor): la distancia de MALLA a malla mezcla el facetado (OpenCASCADE malla el STEP de
+    CATIA con puntos a 0,029 mm de su propio B-Rep). Se recalcula EXACTA en TODOS los puntos de malla a mas de `umbral`:
+    cada punto se lleva a la CASCARA propia (el punto mas cercano del B-Rep de donde salio) y de ahi se mide a la CASCARA
+    del otro. Contra el solido no: un punto que cae ADENTRO del otro solido da 0 y un resalto de 0,05 pasaba (revisor del
+    49). No reemplaza a la de malla: se agrega al lado. None si BRepExtrema no termina."""
+    from build123d import Vertex
+    from OCP.BRepExtrema import BRepExtrema_DistShapeShape
+    try:
+        cascara_propia, cascara_otra = propio.shells()[0].wrapped, otro.shells()[0].wrapped
+        peor = 0.0
+        for i in np.where(dist > umbral)[0]:
+            e = BRepExtrema_DistShapeShape(Vertex(*map(float, puntos[i])).wrapped, cascara_propia)
+            e.Perform()
+            if not e.IsDone():
+                return None
+            q = e.PointOnShape2(1)
+            e2 = BRepExtrema_DistShapeShape(Vertex(q.X(), q.Y(), q.Z()).wrapped, cascara_otra)
+            e2.Perform()
+            if not e2.IsDone():
+                return None
+            peor = max(peor, e2.Value())
+        return peor
+    except Exception:  # noqa: BLE001
+        return None
+
+
+ab, ab99, pa_, da_ = hasta(A, Bm)
+ba, ba99, pb_, db_ = hasta(Bm, A)
+ab_ex, ba_ex = exacta(pa_, da_, a, b), exacta(pb_, db_, b, a)
 bba, bbb = a.bounding_box(), b.bounding_box()
 print(json.dumps({"vol_A": round(vol(a), 3), "vol_B": round(vol(b), 3), "sobra_A_menos_B": round(sobra, 3),
                   "falta_B_menos_A": round(falta, 3), "comun": round(comun, 3), "booleana_cierra": cierra, "tolerancia_booleana": fuzz_usado, "dist_max_A_a_B": round(ab, 4), "p99_A_a_B": round(ab99, 4),
                   "dist_max_B_a_A": round(ba, 4), "p99_B_a_A": round(ba99, 4),
+                  "dist_max_exacta_A_a_B": None if ab_ex is None else round(ab_ex, 5),
+                  "dist_max_exacta_B_a_A": None if ba_ex is None else round(ba_ex, 5),
                   "caja_A": [round(bba.size.X, 3), round(bba.size.Y, 3), round(bba.size.Z, 3)],
                   "caja_B": [round(bbb.size.X, 3), round(bbb.size.Y, 3), round(bbb.size.Z, 3)],
                   "solidos": [len(a.solids()), len(b.solids())]}))

@@ -1,0 +1,20 @@
+{
+ "usa_catia": true,
+ "descripcion": "El gancho DOBLE de la casa (build_gancho_doble.py + params_doble.json de la skill cad-design) rehecho EN CATIA desde sus datos: lomo, alas con la cara interna inclinada (el cono que traba), brazos que bajan hacia afuera, redondeos R8, R6 y R3 elegidos por posicion, alivio R4 excavado y la entrada guiada SOLO del lado -Y (lo entregado no tiene la del +Y: el triangulo de signo +1 del script se extruye hacia abajo de la cama). Comparado con OpenCASCADE contra el STEP que genera el script en la misma corrida",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "la geometria que genera el script de la casa (el diseno entregado)",
+  "valor": {
+   "volumen_mm3": 68604.251,
+   "cdg_mm": [
+    6.7948,
+    0.0122,
+    9.9653
+   ]
+  },
+  "unidad": "mm3 / mm",
+  "tolerancia": "sobra y falta 1 mm3; distancia exacta referencia -> CATIA 0,01 mm; CATIA -> referencia: percentil 99 0,01 mm y el volumen y el centro de CATIA por dentro a 0,05 mm3 y 0,01 mm (OpenCASCADE lee el STEP de CATIA con una lamina de 0,029 mm en el corte del alivio con la cara inclinada que CATIA no tiene); volumen y centro del STEP a tol_volumen y 0,01 mm; STEP 1/1/0",
+  "fuente": ".claude/skills/cad-design/examples/gancho_mochila/build_gancho_doble.py y params_doble.json (diseno del gerente de Fak, 24/08/2026), corridos con .venv-cad en cada cierre"
+ },
+ "hallazgo": "la entrada guiada del lado +Y no esta en lo que genera el script (ni en build_gancho.py): pregunta a Fak en PREGUNTAS_FAK.md de la tanda del 24/10"
+}

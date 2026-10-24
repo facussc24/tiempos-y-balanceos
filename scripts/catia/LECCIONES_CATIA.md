@@ -193,6 +193,12 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
 - **Ante un rojo contra la referencia, primero se UBICA la diferencia** (48, 49): booleanas referencia − CATIA y
   CATIA − referencia con volumen, centro y caja de cada pedazo, o el script de build123d repetido con el volumen después
   de cada operación. En el 49 dio un solo pedazo de 56 mm³ en el canto de la boca; en el 48, un paso de 33 mm³.
+- **La distancia de malla a malla mezcla el facetado; la que decide es la EXACTA, en los dos sentidos** (49, principal y
+  su revisor): OpenCASCADE malla el STEP de CATIA (AP203, sin pcurves) con puntos a 0,029 mm de su PROPIO B-Rep donde un
+  cilindro corta una cara inclinada, y `compara.py` daba 0,028 con la geometría exacta (CATIA por dentro = la referencia;
+  con malla fina, 0,0001). `compara.py` ahora lleva cada punto de malla a más de 0,005 a su cáscara y lo mide contra la
+  CÁSCARA del otro (`dist_max_exacta_*`). Contra el SÓLIDO no: un punto adentro del otro da 0 y un resalto de 0,05 pasaba
+  (primer intento, cazado por el revisor con gemelos de resaltos y muescas).
 - **Las cotas derivadas se calculan como las calcula el script** (`derivadas()` de cada `build_gancho*.py`) y la prueba
   las compara con las de build123d (48, 50): si el script cambia, CATIA no queda desincronizada en silencio.
 - **Cajas a lo largo de un mismo eje son UN perfil extruido** (50, CATA): el gancho de Leo en CATIA es un croquis de 16
