@@ -97,6 +97,9 @@ def cerrar_con_papel(carpeta, choque=None, medir=None):
         s = json.load(f)
     s["ok_pasos"] = bool(s.get("ok_pasos", s.get("ok")))
     s.pop("pendiente", None)
+    if "error_juez" not in s:          # idempotente: el error de correr_ejercicio queda aparte (pedido 10)
+        s["error_juez"] = s.get("error")
+    s.pop("error", None)
     problemas = []
     juez = {"d_mm": round(d, 4), "ficha_mm": D_FICHA, "perno_cuenta": round(V_PERNO, 3),
             "placa_cuenta": round(V_PLACA, 3)}
@@ -132,10 +135,10 @@ def cerrar_con_papel(carpeta, choque=None, medir=None):
         if not (_num(red) and red > SIN_CHOQUE):
             problemas.append(f"el perno redondo corrido 0,15 no choca ({red} mm3): el gemelo no separa")
     s["juez"] = juez
-    s["ok"] = s["ok_pasos"] and not problemas
-    if problemas:
-        texto = "; ".join(problemas)
-        s["error"] = f"{s['error']}; {texto}" if s.get("error") else texto
+    s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
+    texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)
+    if texto:
+        s["error"] = texto
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(s, f, ensure_ascii=False, indent=1, default=str)
     print("FIN_PAPEL", json.dumps({"ok": s["ok"], "ok_pasos": s["ok_pasos"], **juez}))

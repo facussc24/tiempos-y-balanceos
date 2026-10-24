@@ -12,8 +12,10 @@ en su encabezado: devuelve el contexto en vez de capturar y guardar). Este archi
   - el material del catalogo (el preferido de la CFG; si no esta, Steel) con su parametro Density en la densidad de la
     guia, para que la masa salga de CATIA (material_con_densidad del 22);
   - la masa contra la guia (1 g, la tolerancia de masa del banco: control masa_esperada) y su coherencia con el volumen;
-  - el volumen contra el gemelo de build123d de la practica (gemelo_b123d.py, la pieza entera: 0,5 mm3);
-  - el STEP medido con build123d contra el volumen de CATIA.
+  - el volumen contra el gemelo de build123d de la practica (gemelo_b123d.py, la pieza entera: 0,5 mm3) y el centro
+    contra el del gemelo a TOL_CDG por eje (pedido 10 de la principal, 24/10: la masa no ve un agujero corrido);
+  - el STEP medido con build123d contra el volumen y el centro de CATIA, con 1 solido y 0 caras sueltas;
+  - el error de correr_ejercicio (una excepcion fuera de un paso) nunca da verde (error_juez, pedido 10).
 correr_ejercicio va con con_bien=False (no hay bien.py) y el veredicto lo da cerrar_con_respuesta().
 
 Uso: python catia.py <carpeta de trabajo>  ->  salida.json, el STEP y la captura.
@@ -84,6 +86,17 @@ def gemelo(cfg, correr=subprocess.run):
         return {"error": f"el gemelo no midio: {ex!r}"[:300]}
 
 
+def _dif_centro(a, b):
+    """El mayor de los tres ejes entre dos centros, o None si alguno no es un trio de numeros (un NaN da None)."""
+    try:
+        difs = [abs(float(x) - float(y)) for x, y in zip(a, b)] if len(a) == 3 and len(b) == 3 else None
+    except (TypeError, ValueError):
+        return None
+    if not difs or any(x != x for x in difs):          # max() deja pasar un NaN que quede al final: se mira cada uno
+        return None
+    return round(max(difs), 4)
+
+
 def cerrar_con_respuesta(carpeta, cfg, medir_gemelo=None):
     """Despues de correr_ejercicio (con_bien=False): la masa contra la guia, el volumen contra el gemelo y el STEP contra
     el volumen de CATIA."""
@@ -92,6 +105,9 @@ def cerrar_con_respuesta(carpeta, cfg, medir_gemelo=None):
         s = json.load(f)
     s["ok_pasos"] = bool(s.get("ok_pasos", s.get("ok")))
     s.pop("pendiente", None)                      # lo deja correr_ejercicio con con_bien=False (revisor del 18)
+    if "error_juez" not in s:          # idempotente: el error de correr_ejercicio queda aparte (pedido 10)
+        s["error_juez"] = s.get("error")
+    s.pop("error", None)
     parte, problemas, juez = cfg["parte"], [], {"masa_guia_g": cfg["masa_g"]}
     vc, masa = (s.get("volumen_catia") or {}).get(parte), s.get("masa_catia_g")
     if vc is None:
@@ -101,9 +117,9 @@ def cerrar_con_respuesta(carpeta, cfg, medir_gemelo=None):
     elif vc is not None:                          # revisor: con «elif vc» un 0,0 se salteaba en silencio
         juez.update({"masa_catia_g": masa, "dif_guia_g": round(masa - cfg["masa_g"], 3),
                      "densidad_implicita_kg_m3": round(masa / vc * 1e6, 3)})
-        if abs(juez["dif_guia_g"]) > cfg.get("tol_masa_g", TOL_MASA_G):     # la guia del 31 dice +-10 g
+        if not abs(juez["dif_guia_g"]) <= cfg.get("tol_masa_g", TOL_MASA_G):     # la guia del 31 dice +-10 g
             problemas.append(f"{masa} g contra {cfg['masa_g']} de la guia")
-        if abs(juez["densidad_implicita_kg_m3"] - cfg["densidad"]) > TOL_COHERENCIA * cfg["densidad"]:
+        if not abs(juez["densidad_implicita_kg_m3"] - cfg["densidad"]) <= TOL_COHERENCIA * cfg["densidad"]:
             problemas.append(f"masa sin coherencia con el volumen ({juez['densidad_implicita_kg_m3']})")
     g = (medir_gemelo or (lambda: gemelo(cfg)))()
     if "error" in g:
@@ -111,17 +127,40 @@ def cerrar_con_respuesta(carpeta, cfg, medir_gemelo=None):
     elif vc is not None:
         juez.update({"volumen_gemelo": g["volumen"], "dif_gemelo_mm3": round(vc - g["volumen"], 3),
                      "fuente_gemelo": g.get("fuente") or "gemelo_b123d.py corrido en esta corrida"})   # revisor del 31
-        if abs(juez["dif_gemelo_mm3"]) > TOL_VOL:
+        if not abs(juez["dif_gemelo_mm3"]) <= TOL_VOL:
             problemas.append(f"CATIA {vc} contra el gemelo {g['volumen']} mm3")
+    # el centro (pedido 10 de la principal, 24/10): un agujero corrido o un perfil espejado no cambian masa ni volumen.
+    # CATIA contra el gemelo; si la referencia es solo un volumen (el 31), no hay centro contra que comparar y se dice
+    cc = (s.get("cdg_catia_mm") or {}).get(parte)
+    if "error" not in g:
+        if g.get("cdg") is not None:
+            juez["dif_cdg_gemelo_mm"] = _dif_centro(cc, g["cdg"])
+            if not (juez["dif_cdg_gemelo_mm"] is not None and juez["dif_cdg_gemelo_mm"] <= jc.TOL_CDG):
+                problemas.append(f"el centro de CATIA {cc} no es el del gemelo {g['cdg']}")
+        elif cfg.get("volumen_referencia") is None:
+            problemas.append("el gemelo no dio centro")
+        else:
+            juez["centro_gemelo"] = "sin centro: la referencia es solo un volumen"
     vs = s.get("volumen_step_catia_en_build123d")      # si build123d no midio, juez_comun deja un texto
     v_step = vs.get(parte) if isinstance(vs, dict) else None
-    if not isinstance(v_step, (int, float)) or vc is None or abs(v_step - vc) > TOL_VOL:
+    if not isinstance(v_step, (int, float)) or vc is None or not abs(v_step - vc) <= TOL_VOL:
         problemas.append(f"el STEP ({v_step}) no da el volumen de CATIA ({vc})")
+    st = s.get("step_catia_en_build123d")              # centro y topologia del STEP (juez_comun, desde 72d5c027)
+    st = st.get(parte) if isinstance(st, dict) else None
+    if not isinstance(st, dict):
+        problemas.append(f"sin el centro y la topologia del STEP ({s.get('step_catia_en_build123d')})")
+    else:
+        juez.update({"step_solidos": st.get("solidos"), "dif_cdg_step_mm": _dif_centro(st.get("cdg_mm"), cc)})
+        if st.get("solidos") != 1 or st.get("caras_sueltas") != 0:
+            problemas.append(f"el STEP no es 1 solido cerrado ({st.get('solidos')} solidos, {st.get('caras_sueltas')} "
+                             "caras sueltas)")
+        if not (juez["dif_cdg_step_mm"] is not None and juez["dif_cdg_step_mm"] <= jc.TOL_CDG):
+            problemas.append(f"el centro del STEP {st.get('cdg_mm')} no es el de CATIA {cc}")
     s["juez"] = juez
-    s["ok"] = s["ok_pasos"] and not problemas
-    if problemas:
-        texto = "; ".join(problemas)
-        s["error"] = f"{s['error']}; {texto}" if s.get("error") else texto
+    s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
+    texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)
+    if texto:
+        s["error"] = texto
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(s, f, ensure_ascii=False, indent=1, default=str)
     print("FIN_RESPUESTA", json.dumps({"ok": s["ok"], "ok_pasos": s["ok_pasos"], **juez}))

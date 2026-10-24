@@ -145,6 +145,9 @@ def cerrar_con_choque(carpeta, choque=None):
         s = json.load(f)
     s["ok_pasos"] = bool(s.get("ok_pasos", s.get("ok")))
     s.pop("pendiente", None)
+    if "error_juez" not in s:          # idempotente: el error de correr_ejercicio queda aparte (pedido 10)
+        s["error_juez"] = s.get("error")
+    s.pop("error", None)
     problemas, juez = [], {}
     sub = os.path.join(carpeta, EJ)
     ch = (choque or correr_choque)(os.path.join(sub, PARTE + ".stp"), os.path.join(sub, "panel_copia.step"))
@@ -155,22 +158,22 @@ def cerrar_con_choque(carpeta, choque=None):
     vc, vo = (s.get("volumen_catia") or {}).get(PARTE), ch.get("vol_utillaje")
     juez.update({"nido_catia": vc, "nido_opencascade": vo, "bloque_catia": s.get("bloque_catia"), "bloque_cuenta": BLOQUE,
                  "solidos_nido": ch.get("solidos_utillaje"), "gemelo_subido_1mm": ch.get("gemelo_subido_1.0_interseccion")})
-    if not isinstance(vc, (int, float)) or not isinstance(vo, (int, float)) or abs(vc - vo) > TOL_REL * abs(vo):
+    if not isinstance(vc, (int, float)) or not isinstance(vo, (int, float)) or not abs(vc - vo) <= TOL_REL * abs(vo):
         problemas.append(f"el nido de CATIA ({vc}) no da el volumen del STEP en OpenCASCADE ({vo})")
     b = s.get("bloque_catia")
-    if not isinstance(b, (int, float)) or abs(b - BLOQUE) > jc.TOL_VOL:
+    if not isinstance(b, (int, float)) or not abs(b - BLOQUE) <= jc.TOL_VOL:
         problemas.append(f"el bloque de CATIA ({b}) no es 170 x 58 x 19 = {BLOQUE}")
     elif isinstance(vc, (int, float)):
         juez["huella_catia"] = round(b - vc, 3)
     # el volumen del bloque no fija DONDE esta: el nido de la practica si (un bloque corrido toca otra parte del panel)
     juez["nido_practica"] = NIDO_PRACTICA
-    if not isinstance(vc, (int, float)) or abs(vc - NIDO_PRACTICA) > jc.TOL_VOL:
+    if not isinstance(vc, (int, float)) or not abs(vc - NIDO_PRACTICA) <= jc.TOL_VOL:
         problemas.append(f"el nido de CATIA ({vc}) no es el de la practica ({NIDO_PRACTICA})")
     s["juez"] = juez
-    s["ok"] = s["ok_pasos"] and not problemas
-    if problemas:
-        texto = "; ".join(problemas)
-        s["error"] = f"{s['error']}; {texto}" if s.get("error") else texto
+    s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
+    texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)
+    if texto:
+        s["error"] = texto
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(s, f, ensure_ascii=False, indent=1, default=str)
     print("FIN_CHOQUE", json.dumps({"ok": s["ok"], "ok_pasos": s["ok_pasos"], **juez}))

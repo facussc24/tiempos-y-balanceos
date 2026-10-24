@@ -94,6 +94,12 @@ def correr_medir_fino(rutas, correr=subprocess.run):
         return {"error": f"la medicion fina no corrio: {ex!r}"[:300]}
 
 
+def _max_eje(a, b):
+    """El mayor de los tres ejes entre dos centros; un NaN da infinito (max() lo deja pasar si queda al final)."""
+    difs = [abs(x - y) for x, y in zip(a, b)]
+    return float("inf") if len(difs) != 3 or any(d != d for d in difs) else round(max(difs), 4)
+
+
 def _rel(a, b):
     return round((a - b) / b, 7)
 
@@ -112,6 +118,9 @@ def cerrar_con_medicion(carpeta, medir=None, medir_fino=None):
         s = json.load(f)
     s["ok_pasos"] = bool(s.get("ok_pasos", s.get("ok")))
     s.pop("pendiente", None)
+    if "error_juez" not in s:          # idempotente: el error de correr_ejercicio queda aparte (pedido 10)
+        s["error_juez"] = s.get("error")
+    s.pop("error", None)
     problemas, juez = [], {}
     sub = os.path.join(carpeta, EJ)
     copia, export = os.path.join(sub, "panel_copia.step"), os.path.join(sub, PARTE + ".stp")
@@ -131,16 +140,16 @@ def cerrar_con_medicion(carpeta, medir=None, medir_fino=None):
     elif None not in (vc, ac, cc):
         juez.update({"volumen_catia": vc, "volumen_fino": fc["vol"], "dif_volumen_rel": _rel(vc, fc["vol"]),
                      "area_catia": ac, "area_fina": fc["area"], "dif_area_rel": _rel(ac, fc["area"]),
-                     "dif_cdg_mm": round(max(abs(x - y) for x, y in zip(cc, fc["cdg"])), 4),
+                     "dif_cdg_mm": _max_eje(cc, fc["cdg"]),
                      "volumen_export_fino": fe["vol"], "dif_export_volumen_rel": _rel(fe["vol"], fc["vol"]),
                      "dif_export_area_rel": _rel(fe["area"], fc["area"]),
-                     "dif_export_cdg_mm": round(max(abs(x - y) for x, y in zip(fe["cdg"], fc["cdg"])), 4)})
+                     "dif_export_cdg_mm": _max_eje(fe["cdg"], fc["cdg"])})
         for k, que in (("dif_volumen_rel", "volumen CATIA contra el STEP"), ("dif_area_rel", "area CATIA contra el STEP"),
                        ("dif_export_volumen_rel", "volumen del STEP de CATIA"), ("dif_export_area_rel", "area del STEP de CATIA")):
-            if abs(juez[k]) > TOL_REL:
+            if not abs(juez[k]) <= TOL_REL:
                 problemas.append(f"{que}: {juez[k]:.4%}")
         for k, que in (("dif_cdg_mm", "centro de CATIA contra el STEP"), ("dif_export_cdg_mm", "centro del STEP de CATIA")):
-            if juez[k] > jc.TOL_CDG:
+            if not juez[k] <= jc.TOL_CDG:
                 problemas.append(f"{que}: {juez[k]} mm")
     if fc and fe and not (fc.get("valido") and fe.get("valido")):
         problemas.append("OpenCASCADE no da valido alguno de los dos STEP")
@@ -149,10 +158,10 @@ def cerrar_con_medicion(carpeta, medir=None, medir_fino=None):
         problemas.append(f"el STEP de CATIA no es 1 solido cerrado: {juez['export_solidos']} solidos, "
                          f"{juez['export_caras_sueltas']} caras sueltas")
     s["juez"] = juez
-    s["ok"] = s["ok_pasos"] and not problemas
-    if problemas:
-        texto = "; ".join(problemas)
-        s["error"] = f"{s['error']}; {texto}" if s.get("error") else texto
+    s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
+    texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)
+    if texto:
+        s["error"] = texto
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(s, f, ensure_ascii=False, indent=1, default=str)
     print("FIN_MEDICION", json.dumps({"ok": s["ok"], "ok_pasos": s["ok_pasos"], **juez}))

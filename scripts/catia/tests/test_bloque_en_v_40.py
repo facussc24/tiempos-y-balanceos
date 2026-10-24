@@ -53,11 +53,12 @@ class Cuenta(unittest.TestCase):
 
 
 class Juez(unittest.TestCase):
-    def juez(self, asiento, ok_pasos=True):
+    def juez(self, asiento, ok_pasos=True, error=None):
         ej = cargar_ej40()
         tmp = tempfile.mkdtemp(prefix="ej40-")
         with open(os.path.join(tmp, "salida.json"), "w", encoding="utf-8") as f:
-            json.dump({"ok": False, "ok_pasos": ok_pasos, "pendiente": True, "asiento": asiento}, f)
+            json.dump(dict({"ok": False, "ok_pasos": ok_pasos, "pendiente": True, "asiento": asiento},
+                           **({"error": error} if error else {})), f)
         return ej.cerrar_con_papel(tmp)
 
     def otro(self, d, **cambios):
@@ -94,6 +95,13 @@ class Juez(unittest.TestCase):
         self.assertNotIn("contra la cuenta", r["error"])
         self.assertNotIn("R raiz(2)", r["error"])
         self.assertFalse(self.juez(self.otro("160.0", y=float("nan")))["ok"])            # un NaN no pasa
+    def test_excepcion_fuera_de_un_paso(self):
+        """Pedido 10 de la principal: el error de correr_ejercicio nunca da verde, aunque todo lo demas cierre."""
+        E = "excepcion fuera de un paso: Traceback ..."
+        r = self.juez(ASIENTO, error=E)
+        self.assertFalse(r["ok"])
+        self.assertIn("excepcion fuera de un paso", r["error"])
+
 
 
 class Construir(unittest.TestCase):

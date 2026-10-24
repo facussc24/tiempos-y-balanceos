@@ -3,7 +3,8 @@
 # por el PEDIDO PARA CATA 6). Cambios para el ejercicio 22 del banco de CATIA (24/10/2026), nada mas: 1) importa solo
 # medir, nueva_pieza, ref y topologia de catia_base (el del repo); 2) cuerpo(c, reg) devuelve ctx (doc, part, body,
 # el plano del asa para ocultarlo y el volumen ANTES del R1 del asa, que es lo que mide el gemelo); la masa, la
-# captura y el STEP los hace el catia.py; 3) sin el bloque __main__.
+# captura y el STEP los hace el catia.py; 3) sin el bloque __main__; 4) 24/10, pedido 10 de la principal: ctx tambien
+# lleva el centro ANTES del R1 del asa (cdg_sin_r1), que se compara con el del gemelo.
 """ej30 — Too Tall Toby Party Pack 01-02 «Post Cap» en CATIA (plano libre para uso educativo, @tootalltoby).
 Shaft del perfil de afuera (D49 x 48, borde de arriba en cuarto de elipse 20 x 8), Rib del asa (elipse 4 x 10 por un
 arco R17 con centro a 15 del eje y 20 de abajo), Groove del hueco (D42, alto 37, 4 grados) y R3 arriba del hueco.
@@ -110,8 +111,10 @@ def cuerpo(c, reg):
 
     def r1_asa():
         # aristas donde el asa toca la pared de afuera (radio 24,5 en el plano XY) y a la altura del asa
-        v0 = vol()
+        m0 = medir(doc, part, body)
+        v0 = m0["volume"]
         ctx["vol_sin_r1"] = v0
+        ctx["cdg_sin_r1"] = m0.get("cdg_mm")         # cambio 4 (pedido 10)
         ar = topologia(doc, body, "Edge")
         cand = [d for d in ar if "cdg" in d and abs(math.hypot(d["cdg"][0], d["cdg"][1]) - 24.5) < 1.0
                 and d["cdg"][0] < -15 and 1 < d["cdg"][2] < 40]

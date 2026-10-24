@@ -71,6 +71,12 @@ def construir(cb, c, reg, salida):
             salida.setdefault("documentos_sin_cerrar", []).append(repr(e)[:200])
 
 
+def _max_eje(a, b):
+    """El mayor de los tres ejes entre dos centros; un NaN da infinito (max() lo deja pasar si queda al final)."""
+    difs = [abs(x - y) for x, y in zip(a, b)]
+    return float("inf") if len(difs) != 3 or any(d != d for d in difs) else round(max(difs), 4)
+
+
 def gemelo(correr=subprocess.run):
     """Volumen de las dos etapas con gemelo_b123d.py (.venv-cad): {"1": {"volumen"}, "2": {"volumen"}} o {"error"}."""
     if not os.path.isfile(jc.VENV_CAD):
@@ -89,6 +95,9 @@ def cerrar_con_respuesta(carpeta, medir_gemelo=None):
         s = json.load(f)
     s["ok_pasos"] = bool(s.get("ok_pasos", s.get("ok")))
     s.pop("pendiente", None)
+    if "error_juez" not in s:          # idempotente: el error de correr_ejercicio queda aparte (pedido 10)
+        s["error_juez"] = s.get("error")
+    s.pop("error", None)
     problemas, juez = [], {}
     g = (medir_gemelo or gemelo)()
     if "error" in g:
@@ -104,9 +113,9 @@ def cerrar_con_respuesta(carpeta, medir_gemelo=None):
         elif vc is not None:
             j.update({"masa_catia_g": masa, "dif_respuesta_g": round(masa - RESPUESTA_G[n], 3),
                       "densidad_implicita_kg_m3": round(masa / vc * 1e6, 3)})
-            if abs(j["dif_respuesta_g"]) > TOL_MASA_G:
+            if not abs(j["dif_respuesta_g"]) <= TOL_MASA_G:
                 problemas.append(f"etapa {n}: {masa} g contra {RESPUESTA_G[n]} del examen")
-            if abs(j["densidad_implicita_kg_m3"] - DENSIDAD) > TOL_COHERENCIA * DENSIDAD:
+            if not abs(j["densidad_implicita_kg_m3"] - DENSIDAD) <= TOL_COHERENCIA * DENSIDAD:
                 problemas.append(f"etapa {n}: masa sin coherencia con el volumen ({j['densidad_implicita_kg_m3']})")
         gn = (g.get(str(n)) or {}) if "error" not in g else {}
         vg = gn.get("volumen")
@@ -114,7 +123,7 @@ def cerrar_con_respuesta(carpeta, medir_gemelo=None):
             problemas.append(f"etapa {n}: el gemelo no dio volumen")
         elif vg is not None and vc is not None:
             j.update({"volumen_catia": vc, "volumen_gemelo": vg, "dif_gemelo_mm3": round(vc - vg, 3)})
-            if abs(j["dif_gemelo_mm3"]) > TOL_VOL:
+            if not abs(j["dif_gemelo_mm3"]) <= TOL_VOL:
                 problemas.append(f"etapa {n}: CATIA {vc} contra el gemelo {vg} mm3")
         # el centro, por eje (revisor del 36: un agujero corrido o el perfil espejado dan el mismo volumen y masa)
         cc, cg = (s.get("cdg_catia_mm") or {}).get(parte), gn.get("cdg")
@@ -122,19 +131,19 @@ def cerrar_con_respuesta(carpeta, medir_gemelo=None):
             if not cc or not cg or len(cc) != 3 or len(cg) != 3:
                 problemas.append(f"etapa {n}: sin centro de CATIA ({cc}) o del gemelo ({cg})")
             else:
-                j["dif_cdg_mm"] = round(max(abs(a - b) for a, b in zip(cc, cg)), 4)
+                j["dif_cdg_mm"] = _max_eje(cc, cg)
                 if not j["dif_cdg_mm"] <= jc.TOL_CDG:
                     problemas.append(f"etapa {n}: el centro de CATIA {cc} no es el del gemelo {cg}")
         v_step = vs.get(parte) if isinstance(vs, dict) else None
         j["volumen_step"] = v_step
-        if not isinstance(v_step, (int, float)) or vc is None or abs(v_step - vc) > TOL_VOL:
+        if not isinstance(v_step, (int, float)) or vc is None or not abs(v_step - vc) <= TOL_VOL:
             problemas.append(f"etapa {n}: el STEP ({v_step}) no da el volumen de CATIA ({vc})")
         juez[str(n)] = j
     s["juez"] = juez
-    s["ok"] = s["ok_pasos"] and not problemas
-    if problemas:
-        texto = "; ".join(problemas)
-        s["error"] = f"{s['error']}; {texto}" if s.get("error") else texto
+    s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
+    texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)
+    if texto:
+        s["error"] = texto
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(s, f, ensure_ascii=False, indent=1, default=str)
     print("FIN_RESPUESTA", json.dumps({"ok": s["ok"], "ok_pasos": s["ok_pasos"], **juez}))

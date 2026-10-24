@@ -231,6 +231,14 @@ class Cuenta18(unittest.TestCase):
         s = self.juez(salida, tmp, ej)
         self.assertTrue(s["ok"], s.get("error"))
 
+    def test_excepcion_fuera_de_un_paso(self):
+        """Pedido 10 de la principal: el error de correr_ejercicio nunca da verde, aunque todo lo demas cierre."""
+        ej, jc, reg, salida, part, doc, ocultos, tmp = self.correr_falso()
+        salida["error"] = "excepcion fuera de un paso: Traceback ..."
+        s = self.juez(salida, tmp, ej)
+        self.assertFalse(s["ok"])
+        self.assertIn("excepcion fuera de un paso", s["error"])
+
     def test_juez_rojo(self):
         ej, jc, reg, salida, part, doc, ocultos, tmp = self.correr_falso()
         malo = json.loads(json.dumps(salida))

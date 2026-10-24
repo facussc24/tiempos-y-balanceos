@@ -45,4 +45,6 @@ if __name__ == "__main__":
     s = r[0] if isinstance(r, tuple) else r
     if len(sys.argv) > 1:
         export_step(s, sys.argv[1])
-    print(json.dumps({"volumen": round(s.volume, 3), "solidos": len(s.solids())}))
+    c = s.center()                  # 24/10, pedido 10 de la principal: el centro, contra el de CATIA
+    print(json.dumps({"volumen": round(s.volume, 3), "solidos": len(s.solids()),
+                      "cdg": [round(c.X, 4), round(c.Y, 4), round(c.Z, 4)]}))

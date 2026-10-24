@@ -3,7 +3,9 @@
 # por el PEDIDO PARA CATA 8). Cambios para el ejercicio 31 del banco de CATIA (24/10/2026), nada mas: 1) no importa
 # captura, correr ni guardar_pieza; 2) cuerpo(c, reg) devuelve ctx (doc, part, el cuerpo principal, sf y lo de construccion: 1
 # llamada a InsertHybridShape que corre dos veces, cada objeto se anota para ocultarlo) en vez de capturar y guardar: la masa, la captura y el
-# STEP los hace el catia.py; 3) sin el bloque __main__ (armado por script, sin tocar nada mas).
+# STEP los hace el catia.py; 3) sin el bloque __main__ (armado por script, sin tocar nada mas); 4) CAMBIO 4 (24/10,
+# pedido 10 de la principal): el set «Ensanche_pata» (el relleno del triangulo, construccion) se anota para ocultarlo:
+# CATIA lo exportaba al STEP como una cara suelta de 478,8 mm2 (lo vio el chequeo de topologia del STEP).
 """ej54 — Too Tall Toby 23-02-02 «SM Hanger» (chapa de 4) en CATIA como SOLIDO: esta R21 no tiene la biblioteca de chapa
 por COM (medido 19/10: ninguna typelib de Sheet Metal; la SMT es DMU Optimizer). Un cuarto (x >= 0, y >= 0) y dos simetrias:
 1. costado: perfil grueso (R7 afuera, R3 adentro) pad 40 en +Y; 2. doblez de abajo + pie: pad 40..56,26;
@@ -110,6 +112,7 @@ def cuerpo(c, reg):
         t = json.load(open(os.path.join(AQUI, "triangulo.json")))
         gs = part.HybridBodies.Add()
         gs.Name = "Ensanche_pata"
+        ctx["construccion"].append(gs)             # CAMBIO 4: el relleno no va al STEP
         pts = [hsf.AddNewPointCoord(*p) for p in t["p"]]
         for p in pts:
             gs.AppendHybridShape(p)

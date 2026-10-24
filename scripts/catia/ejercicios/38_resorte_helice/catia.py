@@ -63,30 +63,33 @@ def cerrar_con_formula(carpeta):
         s = json.load(f)
     s["ok_pasos"] = bool(s.get("ok_pasos", s.get("ok")))
     s.pop("pendiente", None)
+    if "error_juez" not in s:          # idempotente: el error de correr_ejercicio queda aparte (pedido 10)
+        s["error_juez"] = s.get("error")
+    s.pop("error", None)
     problemas, juez = [], {"angulo_grados": round(math.degrees(ANGULO), 5), "largo_cuenta": round(LARGO, 4)}
     vs = s.get("volumen_step_catia_en_build123d")
     for parte, esperado in ESPERADO.items():
         vc = (s.get("volumen_catia") or {}).get(parte)
         L = (s.get("largo_helice_catia") or {}).get(parte)
         j = {"esperado": round(esperado, 3), "volumen_catia": vc, "largo_helice": L}
-        if not isinstance(L, (int, float)) or abs(L - LARGO) > TOL_LARGO:
+        if not isinstance(L, (int, float)) or not abs(L - LARGO) <= TOL_LARGO:
             problemas.append(f"{parte}: el largo de la helice ({L}) no es la cuenta ({LARGO:.4f})")
         if not isinstance(vc, (int, float)):
             problemas.append(f"{parte}: CATIA no midio la pieza")
         else:
             j["dif_mm3"] = round(vc - esperado, 3)
-            if abs(j["dif_mm3"]) > jc.TOL_VOL:
+            if not abs(j["dif_mm3"]) <= jc.TOL_VOL:
                 problemas.append(f"{parte}: CATIA {vc} contra la formula {esperado:.3f} mm3")
         v_step = vs.get(parte) if isinstance(vs, dict) else None
         j["volumen_step"] = v_step
-        if not isinstance(v_step, (int, float)) or not isinstance(vc, (int, float)) or abs(v_step - vc) > jc.TOL_VOL:
+        if not isinstance(v_step, (int, float)) or not isinstance(vc, (int, float)) or not abs(v_step - vc) <= jc.TOL_VOL:
             problemas.append(f"{parte}: el STEP ({v_step}) no da el volumen de CATIA ({vc})")
         juez[parte] = j
     s["juez"] = juez
-    s["ok"] = s["ok_pasos"] and not problemas
-    if problemas:
-        texto = "; ".join(problemas)
-        s["error"] = f"{s['error']}; {texto}" if s.get("error") else texto
+    s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
+    texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)
+    if texto:
+        s["error"] = texto
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(s, f, ensure_ascii=False, indent=1, default=str)
     print("FIN_FORMULA", json.dumps({"ok": s["ok"], "ok_pasos": s["ok_pasos"], **juez}))

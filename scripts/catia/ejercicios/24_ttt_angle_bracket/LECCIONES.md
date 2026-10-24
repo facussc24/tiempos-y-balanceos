@@ -32,3 +32,10 @@ Para la centralización (LECCIONES_CATIA.md / catia.md):
 4. **Dos módulos con el mismo nombre en carpetas distintas** (`gemelo_b123d.py` del 18, 22, 24...): en una misma corrida
    de pruebas Python reusa el primero que cargó. Las pruebas cargan cada gemelo por ruta y con nombre propio; los
    `catia.py` cargan su pieza igual.
+5. **El centro, en el molde (pedido 10 de la principal, 24/10 13:40-13:42, corridas `*_p10`)**: el juez compara el centro
+   de CATIA con el del gemelo a TOL_CDG por eje y el STEP con 1 sólido y 0 caras sueltas y el mismo centro (lo mide
+   `juez_comun` desde 72d5c027). Dio 0,0004 / 0,0005 / 0,0005 / 0,0004 mm en el 24, 26, 28 y 30. El 31 no tiene centro de
+   referencia (la de la guía es solo un volumen) y el juez lo dice en vez de callarlo. Un error de `correr_ejercicio`
+   (una excepción fuera de un paso) queda en `error_juez` y nunca da verde; el cierre es idempotente.
+6. **`max()` de Python deja pasar un NaN si queda al final de la lista** (`max([0.0003, nan])` da 0.0003): la diferencia
+   de centros se mira eje por eje (`_dif_centro`). Lo vio la prueba del NaN antes que una corrida.

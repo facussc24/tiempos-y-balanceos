@@ -30,6 +30,8 @@ from test_c_clamp_base_08 import Obj  # noqa: E402
 
 VOL_CATIA, VOL_SIN_R1 = 42248.444, 42225.749          # R21 de CATA, 24/10/2026 10:20 (= ej30 del 19/10)
 VOL_GEMELO = 42225.726                                 # gemelo_b123d.py (sin los R1 del asa)
+CDG_GEMELO = [-0.7344, 0.0, 28.451]                    # gemelo_b123d.py, 24/10 (pedido 10 de la principal)
+CDG_SIN_R1 = [-0.734, 0.0, 28.451]                     # CATIA antes del R1 (22_final2)
 
 
 def cargar_ej22():
@@ -66,6 +68,7 @@ class Cuenta(unittest.TestCase):
         for prohibido in ("captura(", "guardar_pieza(", "correr(", '__name__ == "__main__"'):
             self.assertNotIn(prohibido, texto)
         self.assertIn('ctx["vol_sin_r1"] = v0', texto)
+        self.assertIn('ctx["cdg_sin_r1"] = m0.get("cdg_mm")', texto)
         self.assertIn("Origen: ej30_post_cap.py", texto)
 
 
@@ -99,7 +102,8 @@ class Cuenta22(unittest.TestCase):
         doc.GetWorkbench = lambda n: Obj(Inertias=Obj(Add=lambda prod: Obj(
             Density=densidad.Value if est["material"] else 1000.0,
             Mass=VOL_CATIA * 1e-9 * (densidad.Value if est["material"] else 1000.0))))
-        ctx = {"doc": doc, "part": part, "body": "cuerpo", "planos": ["plano del asa"], "vol_sin_r1": VOL_SIN_R1}
+        ctx = {"doc": doc, "part": part, "body": "cuerpo", "planos": ["plano del asa"], "vol_sin_r1": VOL_SIN_R1,
+               "cdg_sin_r1": list(CDG_SIN_R1)}
         original = pieza_ej30.cuerpo
         pieza_ej30.cuerpo = lambda c, reg: ctx
         mats = [Obj(Name=n) for n in catalogo]
@@ -136,8 +140,10 @@ class Cuenta22(unittest.TestCase):
     def juez(self, salida, tmp, ej, gemelo=None, step=True, ok_pasos=True):
         salida["ok_pasos"], salida["ok"] = ok_pasos, False
         salida["volumen_step_catia_en_build123d"] = {ej.PARTE: VOL_CATIA + 0.149} if step else {}
+        salida["step_catia_en_build123d"] = ({ej.PARTE: {"cdg_mm": (salida.get("cdg_catia_mm") or {}).get(ej.PARTE),
+                                                       "solidos": 1, "caras_sueltas": 0}} if step else {})
         ej.jc.escribir(tmp, salida)
-        return ej.cerrar_con_respuesta(tmp, medir_gemelo=gemelo or (lambda: {"volumen": VOL_GEMELO}))
+        return ej.cerrar_con_respuesta(tmp, medir_gemelo=gemelo or (lambda: {"volumen": VOL_GEMELO, "cdg": list(CDG_GEMELO)}))
 
     def test_juez_verde(self):
         ej, jc, salida, ocultos, est, tmp = self.correr_falso()
@@ -151,13 +157,53 @@ class Cuenta22(unittest.TestCase):
         malo["masa_catia_g"] += 2.0
         self.assertFalse(self.juez(malo, tmp, ej)["ok"])
         self.assertFalse(self.juez(json.loads(base), tmp, ej, gemelo=lambda: {"error": "sin entorno"})["ok"])
-        s = self.juez(json.loads(base), tmp, ej, gemelo=lambda: {"volumen": VOL_GEMELO + 5})
+        s = self.juez(json.loads(base), tmp, ej, gemelo=lambda: {"volumen": VOL_GEMELO + 5, "cdg": list(CDG_GEMELO)})
         self.assertIn("contra el gemelo", s["error"])
         sin = json.loads(base)
         sin.pop("volumen_sin_r1_catia")
         self.assertIn("antes del R1", self.juez(sin, tmp, ej)["error"])
         self.assertIn("el STEP", self.juez(json.loads(base), tmp, ej, step=False)["error"])
         self.assertFalse(self.juez(json.loads(base), tmp, ej, ok_pasos=False)["ok"])   # el R1 fallo: nunca verde
+        # pedido 10 de la principal: el centro sin R1 corrido (misma masa), el STEP de dos solidos y la excepcion
+        corrido = json.loads(base)
+        corrido["cdg_sin_r1_catia"][0] += 0.02
+        self.assertIn("no es el del gemelo", self.juez(corrido, tmp, ej)["error"])
+        nan = json.loads(base)
+        nan["cdg_sin_r1_catia"][2] = float("nan")
+        self.assertFalse(self.juez(nan, tmp, ej)["ok"])
+        dos = json.loads(base)
+        salida_dos = self.juez(dos, tmp, ej)                       # verde; despues el mismo con un STEP de dos solidos
+        self.assertTrue(salida_dos["ok"], salida_dos.get("error"))
+        dos = json.loads(base)
+        dos["ok_pasos"], dos["ok"] = True, False
+        dos["volumen_step_catia_en_build123d"] = {ej.PARTE: VOL_CATIA + 0.149}
+        dos["step_catia_en_build123d"] = {ej.PARTE: {"cdg_mm": dos["cdg_catia_mm"][ej.PARTE], "solidos": 2,
+                                                     "caras_sueltas": 0}}
+        ej.jc.escribir(tmp, dos)
+        r = ej.cerrar_con_respuesta(tmp, medir_gemelo=lambda: {"volumen": VOL_GEMELO, "cdg": list(CDG_GEMELO)})
+        self.assertIn("1 solido cerrado", r["error"])
+        exc = json.loads(base)
+        exc["error"] = "excepcion fuera de un paso: Traceback ..."
+        r = self.juez(exc, tmp, ej)
+        self.assertFalse(r["ok"])
+        self.assertIn("excepcion fuera de un paso", r["error"])
+        # revisor del pedido 10: la cara suelta, el centro del STEP y la idempotencia con un rojo seguido de un verde
+        for info, texto in (({"solidos": 1, "caras_sueltas": 1}, "1 solido cerrado"),
+                            ({"solidos": 1, "caras_sueltas": 0, "cdg_mm": [9.0, 9.0, 9.0]}, "centro del STEP")):
+            otro = json.loads(base)
+            otro["ok_pasos"], otro["ok"] = True, False
+            otro["volumen_step_catia_en_build123d"] = {ej.PARTE: VOL_CATIA + 0.149}
+            otro["step_catia_en_build123d"] = {ej.PARTE: dict({"cdg_mm": otro["cdg_catia_mm"][ej.PARTE]}, **info)}
+            ej.jc.escribir(tmp, otro)
+            r = ej.cerrar_con_respuesta(tmp, medir_gemelo=lambda: {"volumen": VOL_GEMELO, "cdg": list(CDG_GEMELO)})
+            self.assertIn(texto, r["error"])
+        r = self.juez(json.loads(base), tmp, ej, gemelo=lambda: {"volumen": VOL_GEMELO + 5, "cdg": list(CDG_GEMELO)})
+        self.assertFalse(r["ok"])
+        with open(os.path.join(tmp, "salida.json"), encoding="utf-8") as f:
+            otra = json.load(f)
+        ej.jc.escribir(tmp, otra)
+        r = ej.cerrar_con_respuesta(tmp, medir_gemelo=lambda: {"volumen": VOL_GEMELO, "cdg": list(CDG_GEMELO)})
+        self.assertTrue(r["ok"], r.get("error"))
 
 
 if __name__ == "__main__":

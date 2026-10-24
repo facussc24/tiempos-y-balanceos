@@ -15,3 +15,9 @@ Para la centralización (LECCIONES_CATIA.md / catia.md):
    del 24 acepta eso y una tolerancia de masa por ejercicio (`tol_masa_g`: la guía de este dice ± 10 g).
 3. Los perfiles del ej54 (`ej54_sm_hanger/*.json`) los generó `perfiles.py` de la práctica, que depende de herramientas
    que no están en el repo (`de_build123d`, la referencia): se copiaron solo los json.
+- **El STEP traía una cara suelta, y ningún juez la veía** (pedido 10 de la principal, 24/10): con la topología del STEP
+  en el juez del molde, la corrida `31_p10` dio 1 sólido y 1 cara suelta, una cara plana de 478,8 mm² en x 87-116,
+  y 40-56, z 10,5-61,5: el relleno del triángulo del ensanche de la pata (`AddNewFill`, el set «Ensanche_pata»), que es
+  construcción y quedaba visible. Ya estaba en la corrida del commit f169e095 (`31_final3`: 2 cáscaras, 1 cara suelta).
+  CAMBIO 4 de la copia: el set se anota para ocultarlo; `31_p10b` (13:44): 1 sólido, 0 caras sueltas, 1 027,70 g y el
+  volumen como antes. Sin centro de referencia (la de la guía es solo un volumen): el juez lo dice.

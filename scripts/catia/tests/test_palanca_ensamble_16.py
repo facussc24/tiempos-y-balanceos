@@ -295,6 +295,29 @@ class Cuenta16(unittest.TestCase):
         self.assertFalse(s["ok"])
         self.assertIn("palanca: sin posicion leida", s["error"])
 
+    def test_juez_rojo_con_nan_y_con_excepcion_e_idempotente(self):
+        """Pedido 10 de la principal: un NaN en la pose y una excepcion fuera de un paso nunca dan verde, y cerrar dos
+        veces da lo mismo (antes el segundo cierre tomaba su propio ok como el del cruce con build123d)."""
+        ej = cargar_ej16()
+        base = ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0), (0.0, 0.0, 0.0))
+        px, py, pz, po = ej.POSE["palanca"]
+        nan = {"base": base, **ej.POSE, "palanca": (px, py, (pz[0], pz[1], float("nan")), po)}     # NaN al final
+        self.assertFalse(self.juez(nan)["ok"])
+        ej, jc, reg, salida, piezas, prod, tmp = self.correr_falso(None, False)
+        salida["ok"] = jc.comparar(salida)
+        salida["error"] = "excepcion fuera de un paso: Traceback ..."
+        jc.escribir(tmp, salida)
+        s = ej.cerrar_con_posiciones(tmp)
+        self.assertFalse(s["ok"])
+        self.assertIn("excepcion fuera de un paso", s["error"])
+        ej, jc, reg, salida, piezas, prod, tmp = self.correr_falso(None, False)
+        salida["ok"] = jc.comparar(salida)
+        jc.escribir(tmp, salida)
+        uno = ej.cerrar_con_posiciones(tmp)
+        dos = ej.cerrar_con_posiciones(tmp)
+        self.assertEqual((uno["ok"], uno.get("error")), (dos["ok"], dos.get("error")))
+        self.assertTrue(dos["ok"], dos.get("error"))
+
 
 if __name__ == "__main__":
     unittest.main()

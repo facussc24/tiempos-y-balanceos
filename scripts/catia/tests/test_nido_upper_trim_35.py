@@ -134,11 +134,13 @@ class Construir(unittest.TestCase):
 
 
 class Juez(unittest.TestCase):
-    def juez(self, choque=None, nido=NIDO, bloque=BLOQUE, ok_pasos=True):
+    def juez(self, choque=None, nido=NIDO, bloque=BLOQUE, ok_pasos=True, error=None):
         ej = cargar_ej35()
         tmp = tempfile.mkdtemp(prefix="ej35-juez-")
         salida = {"ok": False, "ok_pasos": ok_pasos, "pendiente": True, "volumen_catia": {ej.PARTE: nido},
                   "bloque_catia": bloque}
+        if error:
+            salida["error"] = error
         with open(os.path.join(tmp, "salida.json"), "w", encoding="utf-8") as f:
             json.dump(salida, f)
         vistos = []
@@ -169,6 +171,13 @@ class Juez(unittest.TestCase):
         s = self.juez(nido=NIDO + 1.0, choque=dict(CHOQUE, vol_utillaje=NIDO + 1.0 - 1.989))
         self.assertIn("de la practica", s["error"])
         self.assertNotIn("volumen del STEP", s["error"])
+    def test_excepcion_fuera_de_un_paso(self):
+        """Pedido 10 de la principal: el error de correr_ejercicio nunca da verde, aunque todo lo demas cierre."""
+        E = "excepcion fuera de un paso: Traceback ..."
+        r = self.juez(error=E)
+        self.assertFalse(r["ok"])
+        self.assertIn("excepcion fuera de un paso", r["error"])
+
 
 
 class CorrerChoque(unittest.TestCase):

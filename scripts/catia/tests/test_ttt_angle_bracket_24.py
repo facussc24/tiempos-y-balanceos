@@ -33,6 +33,21 @@ MEDIDO = {"24_ttt_angle_bracket": (39743.209, 39743.338), "26_ttt_tie_plate": (4
 GEMELO = {"24_ttt_angle_bracket": 39743.211, "26_ttt_tie_plate": 434238.267, "28_ttt_bearing_bracket": 102198.25,
           "30_ttt_corner_tie": 113789.264,                        # gemelo_b123d.py de cada carpeta (= la practica)
           "31_ttt_sm_hanger": 131756.349}                         # 31: la referencia de la guia (no hay gemelo propio)
+# el centro (pedido 10 de la principal): el de CATIA en las corridas final3 (24/10 11:28) y el de cada gemelo; el 31 no
+# tiene centro de referencia (la de la guia es solo un volumen)
+CDG_CATIA = {"24_ttt_angle_bracket": [20.054, 0.0, 5.612], "26_ttt_tie_plate": [0.0, 0.0, 6.609],
+             "28_ttt_bearing_bracket": [-13.674, 0.0, 21.163], "30_ttt_corner_tie": [-16.082, 0.0, 8.127],
+             "31_ttt_sm_hanger": [0.0, 0.0, 41.14]}
+CDG_GEMELO = {"24_ttt_angle_bracket": [20.0543, 0.0, 5.6124], "26_ttt_tie_plate": [0.0, 0.0, 6.6095],
+              "28_ttt_bearing_bracket": [-13.6736, 0.0, 21.1625], "30_ttt_corner_tie": [-16.0823, 0.0, 8.1274],
+              "31_ttt_sm_hanger": None}
+
+
+def gemelo_medido(carpeta):
+    g = {"volumen": GEMELO[carpeta]}
+    if CDG_GEMELO[carpeta] is not None:
+        g["cdg"] = list(CDG_GEMELO[carpeta])
+    return g
 
 
 def cargar(carpeta, archivo="catia.py", nombre=None):
@@ -70,21 +85,25 @@ def comprobar_gemelo(t, carpeta):
     r = g.pieza()
     s = r[0] if isinstance(r, tuple) else r
     t.assertLess(abs(s.volume - MEDIDO[carpeta][0]), 0.5)
+    c = s.center()
+    t.assertLess(max(abs(a - b) for a, b in zip((c.X, c.Y, c.Z), CDG_CATIA[carpeta])), 0.01)
 
 
-def juez(ej, cfg, salida, tmp, gemelo=None, step=True, ok_pasos=True):
+def juez(ej, cfg, salida, tmp, gemelo=None, step=True, ok_pasos=True, step_info=None):
     salida["ok_pasos"], salida["ok"] = ok_pasos, False
     vc, vstep = MEDIDO[cfg["ej"]]
     salida["volumen_step_catia_en_build123d"] = {cfg["parte"]: vstep} if step else {}
+    info = {"volumen": vstep, "cdg_mm": list(CDG_CATIA[cfg["ej"]]), "solidos": 1, "cascaras": 1, "caras_sueltas": 0}
+    salida["step_catia_en_build123d"] = {cfg["parte"]: dict(info, **(step_info or {}))} if step else {}
     m = ej.e24 if hasattr(ej, "e24") else ej              # el 26, 28 y 30 usan el juez del molde
     m.jc.escribir(tmp, salida)
-    return m.cerrar_con_respuesta(tmp, cfg, medir_gemelo=gemelo or (lambda: {"volumen": GEMELO[cfg["ej"]]}))
+    return m.cerrar_con_respuesta(tmp, cfg, medir_gemelo=gemelo or (lambda: gemelo_medido(cfg["ej"])))
 
 
 def salida_medida(cfg):
     vc = MEDIDO[cfg["ej"]][0]
     return {"volumen_catia": {cfg["parte"]: vc}, "masa_catia_g": round(vc * cfg["densidad"] * 1e-6, 3),
-            "archivos": [], "_steps": {}}
+            "cdg_catia_mm": {cfg["parte"]: list(CDG_CATIA[cfg["ej"]])}, "archivos": [], "_steps": {}}
 
 
 def comprobar_juez(t, carpeta):
@@ -108,9 +127,48 @@ def comprobar_juez(t, carpeta):
     coh = salida_medida(cfg)                                   # masa de la guia pero otra densidad (volumen 2 % menos)
     coh["masa_catia_g"] = cfg["masa_g"]
     coh["volumen_catia"][cfg["parte"]] *= 0.98
-    s = juez(ej, cfg, coh, tmp, gemelo=lambda: {"volumen": coh["volumen_catia"][cfg["parte"]]})
+    s = juez(ej, cfg, coh, tmp, gemelo=lambda: dict(gemelo_medido(carpeta), volumen=coh["volumen_catia"][cfg["parte"]]))
     t.assertIn("sin coherencia", s["error"])
     t.assertNotIn("de la guia", s["error"])
+    # pedido 10 de la principal: el centro (misma masa, otro centro), el STEP de 2 solidos y la excepcion fuera de un paso
+    corrida = salida_medida(cfg)
+    corrida["cdg_catia_mm"][cfg["parte"]][0] += 0.02
+    s = juez(ej, cfg, corrida, tmp, step_info={"cdg_mm": list(corrida["cdg_catia_mm"][cfg["parte"]])})
+    if CDG_GEMELO[carpeta] is not None:
+        t.assertFalse(s["ok"])
+        t.assertIn("no es el del gemelo", s["error"])
+    else:                                       # el 31: sin centro de referencia un centro corrido no se ve, y se dice
+        t.assertTrue(s["ok"], s.get("error"))
+        t.assertEqual(s["juez"]["centro_gemelo"], "sin centro: la referencia es solo un volumen")
+    t.assertIn("no es el de CATIA", juez(ej, cfg, salida_medida(cfg), tmp, step_info={"cdg_mm": [9.0, 9.0, 9.0]})["error"])
+    t.assertIn("1 solido cerrado", juez(ej, cfg, salida_medida(cfg), tmp, step_info={"solidos": 2})["error"])
+    nan = salida_medida(cfg)
+    nan["cdg_catia_mm"][cfg["parte"]][2] = float("nan")
+    t.assertFalse(juez(ej, cfg, nan, tmp)["ok"])
+    exc = salida_medida(cfg)
+    exc["error"] = "excepcion fuera de un paso: Traceback ..."
+    s = juez(ej, cfg, exc, tmp)
+    t.assertFalse(s["ok"])
+    t.assertIn("excepcion fuera de un paso", s["error"])
+    with open(os.path.join(tmp, "salida.json"), encoding="utf-8") as f:   # idempotente: cerrar otra vez da lo mismo
+        otra = json.load(f)
+    m = ej.e24 if hasattr(ej, "e24") else ej
+    m.jc.escribir(tmp, otra)
+    s2 = m.cerrar_con_respuesta(tmp, cfg, medir_gemelo=lambda: gemelo_medido(carpeta))
+    t.assertEqual((s2["ok"], s2["error"]), (s["ok"], s["error"]))
+    # la cara suelta (la del 31_p10: 1 solido y 1 cara suelta) da rojo aunque el solido sea uno (revisor del pedido 10)
+    t.assertIn("1 solido cerrado", juez(ej, cfg, salida_medida(cfg), tmp,
+                                        step_info={"caras_sueltas": 1, "cascaras": 2})["error"])
+    # idempotente de verdad: un cierre que dio ROJO por su cuenta (no por correr_ejercicio) y se vuelve a cerrar bien
+    # queda VERDE y sin error (sin la guarda de error_juez, su propio texto lo dejaba rojo para siempre)
+    rojo = juez(ej, cfg, salida_medida(cfg), tmp, gemelo=lambda: dict(gemelo_medido(carpeta), volumen=GEMELO[carpeta] + 5))
+    t.assertFalse(rojo["ok"])
+    with open(os.path.join(tmp, "salida.json"), encoding="utf-8") as f:
+        otra = json.load(f)
+    m.jc.escribir(tmp, otra)
+    verde = m.cerrar_con_respuesta(tmp, cfg, medir_gemelo=lambda: gemelo_medido(carpeta))
+    t.assertTrue(verde["ok"], verde.get("error"))
+    t.assertNotIn("error", verde)
 
 
 class Cuenta(unittest.TestCase):

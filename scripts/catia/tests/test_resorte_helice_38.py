@@ -136,6 +136,14 @@ class Juez(unittest.TestCase):
         s["ok_pasos"] = False
         self.assertFalse(self.juez(s)["ok"])
 
+    def test_excepcion_fuera_de_un_paso(self):
+        """Pedido 10 de la principal: el error de correr_ejercicio nunca da verde, aunque todo lo demas cierre."""
+        s = self.salida()
+        s["error"] = "excepcion fuera de un paso: Traceback ..."
+        r = self.juez(s)
+        self.assertFalse(r["ok"])
+        self.assertIn("excepcion fuera de un paso", r["error"])
+
 
 if __name__ == "__main__":
     unittest.main()

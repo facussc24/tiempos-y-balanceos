@@ -45,4 +45,6 @@ if __name__ == "__main__":
     s, va = pieza()
     if len(sys.argv) > 1:
         export_step(s, sys.argv[1])
-    print(json.dumps({"volumen": round(s.volume, 3), "asa": round(va, 3), "solidos": len(s.solids())}))
+    c = s.center()                  # 24/10, pedido 10 de la principal: el centro, contra el de CATIA antes del R1
+    print(json.dumps({"volumen": round(s.volume, 3), "asa": round(va, 3), "solidos": len(s.solids()),
+                      "cdg": [round(c.X, 4), round(c.Y, 4), round(c.Z, 4)]}))

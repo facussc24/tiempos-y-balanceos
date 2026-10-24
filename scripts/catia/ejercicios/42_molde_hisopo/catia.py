@@ -85,6 +85,9 @@ def cerrar_con_papel(carpeta, medir=None):
         s = json.load(f)
     s["ok_pasos"] = bool(s.get("ok_pasos", s.get("ok")))
     s.pop("pendiente", None)
+    if "error_juez" not in s:          # idempotente: el error de correr_ejercicio queda aparte (pedido 10)
+        s["error_juez"] = s.get("error")
+    s.pop("error", None)
     problemas = []
     juez = {"papel": PAPEL, "area_cuenta_mm2": round(AREA_CUENTA, 3), "cdg_cuenta_mm": [round(x, 4) for x in CDG_CUENTA]}
     h = s.get("hisopo") or {}
@@ -140,10 +143,10 @@ def cerrar_con_papel(carpeta, medir=None):
     if not _centro_ok(bs.get("cdg_mm"), CDG_CUENTA):
         problemas.append(f"el centro del STEP {bs.get('cdg_mm')} no es la cuenta {juez['cdg_cuenta_mm']}")
     s["juez"] = juez
-    s["ok"] = s["ok_pasos"] and not problemas
-    if problemas:
-        texto = "; ".join(problemas)
-        s["error"] = f"{s['error']}; {texto}" if s.get("error") else texto
+    s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
+    texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)
+    if texto:
+        s["error"] = texto
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(s, f, ensure_ascii=False, indent=1, default=str)
     print("FIN_PAPEL", json.dumps({"ok": s["ok"], "ok_pasos": s["ok_pasos"], **juez}))

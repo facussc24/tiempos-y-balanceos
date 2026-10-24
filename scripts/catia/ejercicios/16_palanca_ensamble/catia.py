@@ -299,12 +299,22 @@ def construir(cb, c, reg, salida):
         ensamble(cb, c, reg, salida, rutas)
 
 
+def _max_ejes(ejes, esperados):
+    """La mayor diferencia entre los ejes leidos y los esperados; NaN si alguna lo es (max() lo deja pasar al final)."""
+    difs = [abs(a - b) for eje, esp in zip(ejes, esperados) for a, b in zip(eje, esp)]
+    return float("nan") if not difs or any(d != d for d in difs) else max(difs)
+
+
 def cerrar_con_posiciones(carpeta):
     """Despues de correr_ejercicio (ok = el conjunto como build123d): cada componente en la pose esperada."""
     ruta = os.path.join(carpeta, "salida.json")
     with open(ruta, encoding="utf-8") as f:
         s = json.load(f)
-    s["ok_cruce_build123d"] = bool(s.get("ok"))
+    if "ok_cruce_build123d" not in s:      # idempotente (pedido 10): el ok y el error de correr_ejercicio quedan aparte
+        s["ok_cruce_build123d"] = bool(s.get("ok"))
+    if "error_juez" not in s:
+        s["error_juez"] = s.get("error")
+    s.pop("error", None)
     pos = s.get("posiciones") or {}
     problemas, dif = [], {}
     esperado = {"base": ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0), (0.0, 0.0, 0.0)), **POSE}
@@ -313,28 +323,27 @@ def cerrar_con_posiciones(carpeta):
         if not p:
             problemas.append(f"{cual}: sin posicion leida")
             continue
-        d_rot = max(abs(a - b) for eje, esp in zip(p["ejes"], (ex, ey, ez)) for a, b in zip(eje, esp))
+        d_rot = _max_ejes(p["ejes"], (ex, ey, ez))
         d_pos = math.dist(p["origen"], o)
         dif[cual] = {"rotacion": d_rot, "origen_mm": round(d_pos, 6)}
-        if d_rot > TOL_ROT or d_pos > TOL_POS:
+        if not (d_rot <= TOL_ROT and d_pos <= TOL_POS):        # «bien si <=»: un NaN da rojo (pedido 10)
             problemas.append(f"{cual} fuera de lugar: rotacion {d_rot:.2e}, origen a {d_pos:.4f} mm de {list(o)}")
     # gemelo: con la orientacion opuesta la barra va hacia -X (la orientacion decide); de vuelta, la pose esperada
     op, rest = s.get("gemelo_orientacion_opuesta"), s.get("posicion_restaurada")
     if not op or not rest:
         problemas.append("sin el gemelo de la orientacion (no se puede saber si «misma» decidio la pose)")
     else:
-        if math.dist(op["ejes"][0], (-1.0, 0.0, 0.0)) > TOL_ROT * 10:
+        if not math.dist(op["ejes"][0], (-1.0, 0.0, 0.0)) <= TOL_ROT * 10:
             problemas.append(f"con la orientacion opuesta la barra no fue a -X: eje X {op['ejes'][0]}")
         ex, ey, ez, o = POSE["palanca"]
-        if max(abs(a - b) for eje, esp in zip(rest["ejes"], (ex, ey, ez)) for a, b in zip(eje, esp)) > TOL_ROT or \
-                math.dist(rest["origen"], o) > TOL_POS:
+        if not (_max_ejes(rest["ejes"], (ex, ey, ez)) <= TOL_ROT and math.dist(rest["origen"], o) <= TOL_POS):
             problemas.append(f"de vuelta a «misma» la palanca no volvio a su pose: {rest}")
     s["dif_posiciones"] = dif
     s["ok_posiciones"] = not problemas
-    s["ok"] = s["ok_cruce_build123d"] and not problemas
-    if problemas:
-        texto = "; ".join(problemas)
-        s["error"] = f"{s['error']}; {texto}" if s.get("error") else texto
+    s["ok"] = s["ok_cruce_build123d"] and not problemas and not s["error_juez"]   # una excepcion: nunca verde
+    texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)
+    if texto:
+        s["error"] = texto
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(s, f, ensure_ascii=False, indent=1, default=str)
     print("FIN_POSICIONES", json.dumps({"ok": s["ok"], "ok_cruce_build123d": s["ok_cruce_build123d"],

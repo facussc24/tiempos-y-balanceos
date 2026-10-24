@@ -71,7 +71,7 @@ def acero_del_examen(cb, c, doc, part):
         out["parametro_densidad"] = e08.poner_densidad(part, m.Name, DENSIDAD_EXAMEN)
         dens, _ = e08.inercia(doc)
         out["densidad_kg_m3"] = round(dens, 3)
-        if abs(dens - DENSIDAD_EXAMEN) > 1e-3:
+        if not abs(dens - DENSIDAD_EXAMEN) <= 1e-3:
             raise RuntimeError(f"la densidad quedo en {dens}, no en {DENSIDAD_EXAMEN}")
         out["ok"] = True
     except Exception as e:  # noqa: BLE001
@@ -140,6 +140,9 @@ def cerrar_con_respuestas(carpeta, medir_gemelo=gemelo):
         s = json.load(f)
     s["ok_pasos"] = bool(s.get("ok_pasos", s.get("ok")))
     s.pop("pendiente", None)                      # lo deja correr_ejercicio con con_bien=False (revisor del 18)
+    if "error_juez" not in s:          # idempotente: el error de correr_ejercicio queda aparte (pedido 10)
+        s["error_juez"] = s.get("error")
+    s.pop("error", None)
     problemas, juez = [], {}
     for n, et in etapas().items():
         d = (s.get("etapas") or {}).get(str(n)) or {}
@@ -155,27 +158,27 @@ def cerrar_con_respuestas(carpeta, medir_gemelo=gemelo):
             j["masa_catia_g"], j["dif_examen_g"] = masa, round(masa - et["masa_examen_g"], 3)
             implicita = masa / vc * 1e6
             j["densidad_implicita_kg_m3"] = round(implicita, 3)
-            if abs(j["dif_examen_g"]) > TOL_MASA_G:
+            if not abs(j["dif_examen_g"]) <= TOL_MASA_G:
                 problemas.append(f"etapa {n}: {masa} g contra {et['masa_examen_g']} del examen")
-            if abs(implicita - DENSIDAD_EXAMEN) > TOL_COHERENCIA * DENSIDAD_EXAMEN:
+            if not abs(implicita - DENSIDAD_EXAMEN) <= TOL_COHERENCIA * DENSIDAD_EXAMEN:
                 problemas.append(f"etapa {n}: masa sin coherencia con el volumen ({implicita})")
         g = medir_gemelo(et["A"], et["B"], et["C"], et["D"], et["E"])
         if "error" in g:
             problemas.append(f"etapa {n}: {g['error']}")
         else:
             j["volumen_gemelo"], j["dif_gemelo_mm3"] = g["volumen"], round(vc - g["volumen"], 3)
-            if abs(j["dif_gemelo_mm3"]) > TOL_VOL:
+            if not abs(j["dif_gemelo_mm3"]) <= TOL_VOL:
                 problemas.append(f"etapa {n}: CATIA {vc} contra el gemelo {g['volumen']} mm3")
         juez[str(n)] = j
     v_step = (s.get("volumen_step_catia_en_build123d") or {}).get(PARTE)
     v1 = ((s.get("etapas") or {}).get("1") or {}).get("volumen_catia")
-    if not isinstance(v_step, (int, float)) or v1 is None or abs(v_step - v1) > TOL_VOL:
+    if not isinstance(v_step, (int, float)) or v1 is None or not abs(v_step - v1) <= TOL_VOL:
         problemas.append(f"el STEP de la etapa 1 ({v_step}) no da su volumen de CATIA ({v1})")
     s["juez_por_etapa"] = juez
-    s["ok"] = s["ok_pasos"] and not problemas
-    if problemas:
-        texto = "; ".join(problemas)
-        s["error"] = f"{s['error']}; {texto}" if s.get("error") else texto
+    s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
+    texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)
+    if texto:
+        s["error"] = texto
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(s, f, ensure_ascii=False, indent=1, default=str)
     print("FIN_RESPUESTAS", json.dumps({"ok": s["ok"], "ok_pasos": s["ok_pasos"],

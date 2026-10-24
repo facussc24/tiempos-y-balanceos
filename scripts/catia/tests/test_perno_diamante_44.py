@@ -111,11 +111,12 @@ class CorrerChoque(unittest.TestCase):
 
 
 class Juez(unittest.TestCase):
-    def juez(self, perno=None, choque=None, ok_pasos=True, step=None):
+    def juez(self, perno=None, choque=None, ok_pasos=True, step=None, error=None):
         ej = cargar_ej44()
         tmp = tempfile.mkdtemp(prefix="ej44-")
         with open(os.path.join(tmp, "salida.json"), "w", encoding="utf-8") as f:
-            json.dump({"ok": False, "ok_pasos": ok_pasos, "pendiente": True, "perno": perno or PERNO}, f)
+            json.dump(dict({"ok": False, "ok_pasos": ok_pasos, "pendiente": True, "perno": perno or PERNO},
+                           **({"error": error} if error else {})), f)
         vistos = []
 
         def falso(ruta):
@@ -155,6 +156,13 @@ class Juez(unittest.TestCase):
         self.assertFalse(self.juez(choque={"error": "sin entorno"})["ok"])
         self.assertFalse(self.juez(ok_pasos=False)["ok"])
         self.assertFalse(self.juez(choque=dict(CHOQUE, **{"diamante_corrido_0.15": float("nan")}))["ok"])
+    def test_excepcion_fuera_de_un_paso(self):
+        """Pedido 10 de la principal: el error de correr_ejercicio nunca da verde, aunque todo lo demas cierre."""
+        E = "excepcion fuera de un paso: Traceback ..."
+        r = self.juez(error=E)
+        self.assertFalse(r["ok"])
+        self.assertIn("excepcion fuera de un paso", r["error"])
+
 
 
 if __name__ == "__main__":

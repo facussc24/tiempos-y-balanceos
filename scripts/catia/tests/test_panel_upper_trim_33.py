@@ -109,12 +109,14 @@ class Construir(unittest.TestCase):
 
 
 class Juez(unittest.TestCase):
-    def juez(self, catia=None, fino=None, defecto=None, ok_pasos=True):
+    def juez(self, catia=None, fino=None, defecto=None, ok_pasos=True, error=None):
         ej = cargar_ej33()
         tmp = tempfile.mkdtemp(prefix="ej33-juez-")
         m = dict(catia or CATIA)
         salida = {"ok": False, "ok_pasos": ok_pasos, "pendiente": True, "volumen_catia": {ej.PARTE: m["volume"]},
                   "cdg_catia_mm": {ej.PARTE: m["cdg_mm"]}, "area_catia_mm2": m["area"]}
+        if error:
+            salida["error"] = error
         with open(os.path.join(tmp, "salida.json"), "w", encoding="utf-8") as f:
             json.dump(salida, f)
         return ej.cerrar_con_medicion(tmp, medir=medir_falso(defecto or DEFECTO),
@@ -150,6 +152,13 @@ class Juez(unittest.TestCase):
         self.assertIn("centro de CATIA", self.juez(catia=m)["error"])
         self.assertIn("medicion fina", self.juez(fino={"error": "sin entorno"})["error"])
         self.assertFalse(self.juez(ok_pasos=False)["ok"])
+    def test_excepcion_fuera_de_un_paso(self):
+        """Pedido 10 de la principal: el error de correr_ejercicio nunca da verde, aunque todo lo demas cierre."""
+        E = "excepcion fuera de un paso: Traceback ..."
+        r = self.juez(error=E)
+        self.assertFalse(r["ok"])
+        self.assertIn("excepcion fuera de un paso", r["error"])
+
 
 
 try:
