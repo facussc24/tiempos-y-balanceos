@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Ejercicio 04 del obrero: la pieza y el nido del ejercicio 04 del banco 3D (nido con holgura) rehechos en CATIA Part
-Design por COM, en una CATIA PROPIA (conectar de catia_base; apagar al final). NO VERIFICADO en CATIA (escrito el
-23/10/2026 sin poder correrlo: en la PC principal no se abre CATIA).
+Design por COM, en una CATIA PROPIA (conectar de catia_base; apagar al final). Escrito el 23/10/2026 sin correrlo;
+VERIFICADO esa noche en la R21 de la PC principal (juez.py, 21:22): pieza 48 000 y nido 163 397,6 mm3 = build123d.
 
 Medidas: C:/Dev/wt-banco3d-B/evals/banco3d/ejercicios/04_nido_holgura/_conjunto.py y bien.py (pieza de ENSAYO del
 banco, sin fuente de Barack): pieza 60 x 40 x 20; nido 100 x 80 x 25 con bolsillo de 15 de profundidad y 0,2 mm de luz
