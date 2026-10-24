@@ -37,6 +37,19 @@ export function pedidoDeEnvio(cmd) {
   return { id: arg('--id'), buscar: arg('--buscar') };
 }
 
+/** El transcript entero, o sus ultimos `colaBytes` bytes si es mas grande que eso. */
+function leerTranscript(f, colaBytes) {
+  if (!(Number(colaBytes) > 0)) return fs.readFileSync(f, 'utf8');
+  const fd = fs.openSync(f, 'r');
+  try {
+    const { size } = fs.fstatSync(fd);
+    const n = Math.min(size, Number(colaBytes));
+    const buf = Buffer.alloc(n);
+    fs.readSync(fd, buf, 0, n, size - n);
+    return buf.toString('utf8');
+  } finally { fs.closeSync(fd); }
+}
+
 const textoDeBloques = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((b) => b?.type === 'text').map((b) => b.text || '').join('\n') : '');
 
 /** Epoch ms del ultimo mensaje REAL de Fak en el transcript (el que escribe mientras trabajo, tambien). 0 si no hay. */
@@ -51,10 +64,13 @@ export function ultimoMensajeDeFak(transcriptPath) {
  * leer. Mismo filtro que decide el OK de un mail (tanda 3, pieza 9, 16/10/2026: lo usa tambien el permiso de un solo uso
  * para comparar la cita con lo que Fak escribio): sin avisos de la app adelante, sin resultados de herramientas, sin
  * resumenes de compactacion ni mensajes automaticos (`esAutomatico`), y una cola solo si la tipeo una persona.
+ * `colaBytes` (23/10/2026, item 6g, la cita de Fak en el encargo): lee solo los ultimos N bytes del transcript (el entero
+ * tarda 6,4 s con uno de 280 MB); el primer renglon, cortado, no parsea y se descarta solo. Sin el parametro lee todo,
+ * como siempre.
  */
-export function mensajesDeFak(transcriptPath) {
+export function mensajesDeFak(transcriptPath, { colaBytes } = {}) {
   let lineas;
-  try { lineas = fs.readFileSync(transcriptPath, 'utf8').split('\n'); } catch { return null; }
+  try { lineas = leerTranscript(transcriptPath, colaBytes).split('\n'); } catch { return null; }
   const out = [];
   for (const linea of lineas) {
     if (!linea.includes('"type":"user"') && !linea.includes('"queued_command"')) continue;
