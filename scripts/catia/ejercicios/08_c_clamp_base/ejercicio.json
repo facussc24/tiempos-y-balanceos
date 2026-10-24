@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Too Tall Toby PPP01-03 C Clamp Base (guia de build123d) en CATIA Part Design: U de perfil con R18 y R7 como arcos del croquis, topes R8 desde planos paralelos a YZ, agujero de 5,5 pasante con avellanado de 11,2 x 90 (Hole Type 3 con los modos del ej33 de la practica), aluminio del catalogo con la densidad del rotulo (2700 kg/m3) y masa de CATIA contra la guia; volumen y centro de gravedad contra build123d (bien.py del 14 del banco 3D); STEP y captura BMP",
+ "banco": "14_ttt_c_clamp_base",
+ "respuesta_conocida": {
+  "que": "masa de la pieza en aleacion 1060",
+  "valor": 96.13,
+  "unidad": "g",
+  "tolerancia": 1.0,
+  "fuente": "guia de build123d, tttt.html#ttt-ppp0103, texto «Object Mass 96.13 g»; aleacion 1060, 2700 kg/m3 y +-1 g del rotulo del plano (evals/banco3d/ejercicios/14_ttt_c_clamp_base/tarea.yaml)"
+ }
+}
