@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Molde de dos mitades de un hisopo de PP en CATIA: pieza por revolucion (cabeza D8,6 x 15,4 + cuerpo D3 x 33,3, eje X en el plano de particion), bloque 68,7 x 30 x 30 menos la pieza, partido por el plano XY con AddNewSplit de cada lado; el area proyectada sale de MEDIR la cara de particion de cada mitad (bloque - cara); fuerza de cierre y piezas por maquina; centro del molde contra la cuenta; STEP del bloque con la cavidad medido con build123d (volumen, 1 solido, centro); pieza = ej71 de la practica copiado con cambios anotados",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "area proyectada de la pieza vista desde la apertura del molde, fuerza de cierre por pieza con 70 MPa y cuantas caben en 80 kN",
+  "valor": {"area_m2": 0.00023234, "F_kN": 16.264, "F_impresa_kN": 16.2, "caben": 4},
+  "unidad": "m2, kN, piezas",
+  "tolerancia": {"area_mm2": 0.01, "F_kN": 0.0005},
+  "fuente": "MIT 2.008, examen practico 1 de 2022, problema 2 con solucion (https://ocw.mit.edu/courses/2-008-design-and-manufacturing-ii-spring-2025/mit2_008_s25_quiz1_prac22_sol.pdf), abierto por el revisor del 42 (pags. 3 a 5): A = (0,0154 x 0,0086) + (0,0333 x 0,003) = 0,00023234 m2; F = 7e7 Pa x 0,00023234 m2, impreso «16.2 kN» (el producto da 16 264 N); «16.2*5 is just above our 80kN»: caben 4. Ficha E13 del banco de la principal (banco_ejercicios_diseno.md). Tolerancias: 0,01 mm2 el area y medio digito del producto 16,264"
+ }
+}
