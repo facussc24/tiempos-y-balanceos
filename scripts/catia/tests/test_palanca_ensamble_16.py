@@ -196,6 +196,7 @@ class Cuenta16(unittest.TestCase):
         orig_extruir = jc.extruir
         jc.extruir = lambda cb_, doc, part, body, sf, sk, largo, dv, centro=None, antes=None, vaciado=False, \
             simetrico=False: (sf.AddNewPad(sk, largo), {"volume": dv, "cdg_mm": [0, 0, 0]}, {"dv": dv})
+        self.addCleanup(setattr, jc, "captura_bmp", jc.captura_bmp)       # auditor de la tanda: se devuelve
         jc.captura_bmp = lambda c_, carpeta, nombre: os.path.join(carpeta, nombre + "_iso.bmp")
         c = Obj(Documents=Obj(Add=lambda tipo: prod))
         cb = types.SimpleNamespace(nueva_pieza=nueva_pieza, medir=medir, evaluar=evaluar, ref=lambda p, o: o,

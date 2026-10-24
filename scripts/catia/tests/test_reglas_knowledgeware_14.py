@@ -232,6 +232,7 @@ class Cuenta14(unittest.TestCase):
             return vert + cont + bord
         cb = types.SimpleNamespace(nueva_pieza=nueva_pieza, medir=medir, guardar_pieza=guardar, ref=lambda p, o: o,
                                    topologia=topologia, poligono=catia_base.poligono, Registro=catia_base.Registro)
+        self.addCleanup(setattr, jc, "captura_bmp", jc.captura_bmp)       # auditor de la tanda: se devuelve
         jc.captura_bmp = lambda c_, carpeta, nombre: os.path.join(carpeta, nombre + "_iso.bmp")
         reg = catia_base.Registro(ej.EJ)
         salida = {"volumen_build123d": {"mango_R1_5": 1.0}, "cdg_build123d_mm": {}, "volumen_catia": {},

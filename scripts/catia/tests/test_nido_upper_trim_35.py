@@ -102,6 +102,7 @@ class Construir(unittest.TestCase):
         cb = types.SimpleNamespace(medir=lambda d, p, b: {"volume": vols["v"], "cdg_mm": [45.0, 0.0, -15.5]},
                                    guardar_pieza=guardar, nueva_pieza=lambda c_, n: (doc, part, cuerpo, sf),
                                    ref=lambda p, o: o, poligono=lambda f, pts: None)
+        self.addCleanup(setattr, ej.jc, "captura_bmp", ej.jc.captura_bmp)   # auditor de la tanda: se devuelve
         ej.jc.captura_bmp = lambda c_, carpeta, nombre: os.path.join(carpeta, nombre + "_iso.bmp")
         reg = catia_base.Registro(ej.EJ)
         salida = {"volumen_catia": {}, "cdg_catia_mm": {}, "archivos": [], "_carpeta": reg.carpeta, "_steps": {}}

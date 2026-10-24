@@ -260,6 +260,7 @@ class Construir(unittest.TestCase):
             return {"step": ruta}
         cb = types.SimpleNamespace(medir=lambda d, p, b: {"volume": vc, "cdg_mm": [0, 0, 0]}, guardar_pieza=guardar,
                                    CATIA_INSTALADA=tmp, Registro=catia_base.Registro)
+        self.addCleanup(setattr, jc, "captura_bmp", jc.captura_bmp)       # auditor de la tanda: se devuelve
         jc.captura_bmp = lambda c_, carpeta, nombre: os.path.join(carpeta, nombre + "_iso.bmp")
         salida = {"volumen_catia": {}, "cdg_catia_mm": {}, "archivos": [], "_carpeta": tmp, "_steps": {}}
         try:
