@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **24/10 — El modelo de un revisor se elige por lo que revisa y por el cupo que gasta, no se fija en el encargo: escribí «revisor Fable por ejercicio» en los dos encargos de CATIA con el cupo de Fable al 66 % (la regla de la casa ya decía Fable solo para un cambio grande, `techo-agentes.md`); lo vio Fak** (*"eso debimos haberlo pensado antes, ¿no?"*). Por ejercicio alcanza el juez por programa más un revisor Sonnet; Fable, al cambiar el método o fundir la tanda.
+
 - **24/10 — Un worktree ya fundido se saca DESPUÉS de mirar si tiene un enlace adentro (`find -type l`): `git worktree remove` entra por el enlace `node_modules` que deja un constructor y borra el DESTINO (01:51: 86 paquetes del repo madre; el guardián V5 lo dice y lo frenó la segunda vez); primero se quita solo el enlace (`[System.IO.Directory]::Delete(enlace, $false)`). Y un asignado que necesita `git pull` en CATA se deja después de que CATA confirme el pull: el obrero toma el ítem antes de que su sesión lea el pedido.**
 
 - **23/10 — Si Fak dice que se va y «frená todo», no se lanza nada más en ese turno y se cierra lo abierto (commit, push, hora terminada): su frase de ese momento le gana a la tanda de 36 h** (*"en 7 minutos me voy y estás lanzando agentes?"*).
