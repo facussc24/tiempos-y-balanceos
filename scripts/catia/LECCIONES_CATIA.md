@@ -37,7 +37,9 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   y el bolsillo hecho del otro lado también; el centro se mueve 0,028 mm con 0,1 mm de corrimiento (8,24 mm el bolsillo
   espejado). El 37 compara el centro de cada etapa en CATIA y el del STEP contra el gemelo a 0,01 mm. Desde el 24/10
   `juez_comun` guarda en `step_catia_en_build123d` el centro y la topología del STEP que ya medía (antes solo el volumen).
-  Mismo hueco, sin arreglar todavía: `practica_en_juez.cerrar_con_masa` (25, 27, 29) compara solo volumen y masa.
+  Mismo hueco en `practica_en_juez.cerrar_con_masa` (25, 27, 29): arreglado el 24/10 (corridas 13:26-13:30) con `gemelo_cdg` (el centro del
+  STEP de CATIA contra el del gemelo a 0,01 mm y el STEP 1/1/0). Antes de usarlo se midió que el gemelo y el STEP de CATIA
+  están en el mismo marco (coinciden a 1e-4 mm en los tres): un centro en otro marco daría rojo siempre.
   CATA llegó a lo mismo en el 36 (el agujero de 14 corrido 3 mm mueve el centro 0,17 mm; la masa, nada) y avisa que sus
   moldes del 22 y el 24 (26, 28, 30) también juzgan solo masa y volumen.
 - **Un control que figura en un comentario y no en el código no existe** (38, CATA): el ej45 de la práctica decía «control

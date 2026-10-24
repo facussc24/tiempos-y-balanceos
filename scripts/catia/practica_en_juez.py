@@ -7,11 +7,14 @@ El ejNN de la practica define cuerpo(c, reg) (o hacer() que devuelve cuerpo), de
 junto a si mismo). Su captura (necesita un conversor a PNG que el paquete no trae) se cambia por la del juez (BMP).
 
     construir_desde_practica(cb, c, reg, salida, carpeta, modulo, nombre_step)   -> para correr_ejercicio(con_bien=False)
-    cerrar_con_masa(carpeta, papel, tol, densidad_g_mm3, gemelo_mm3, factor=1.0, unidad="g")
+    cerrar_con_masa(carpeta, papel, tol, densidad_g_mm3, gemelo_mm3, factor=1.0, unidad="g", gemelo_cdg=None)
 
-ok = los pasos sin falla Y la masa (volumen x densidad / factor) a `tol` o menos del papel Y el volumen a 0,5 mm3 del
-gemelo de build123d de la practica Y el STEP de CATIA, leido con build123d, con el volumen de CATIA (las dos a 0,5 mm3 o
-1e-5 del volumen, lo que sea mayor: tol_volumen)."""
+ok = los pasos sin falla y sin error del juez Y la masa (volumen x densidad / factor) a `tol` o menos del papel Y el
+volumen a 0,5 mm3 del gemelo de build123d de la practica Y el STEP de CATIA, leido con build123d, con el volumen de CATIA
+(las dos a 0,5 mm3 o 1e-5 del volumen, lo que sea mayor: tol_volumen) Y, con `gemelo_cdg`, el STEP de CATIA en 1 solido,
+1 cascara y 0 caras sueltas y con el CENTRO DE GRAVEDAD del gemelo a 0,01 mm (24/10, revisor del 37 y CATA en el 36: la
+masa y el volumen no ven un rasgo corrido que no se cruza con nada; el centro si). Toda comparacion es «bien si
+|x - y| <= tol»: un NaN da rojo."""
 import importlib
 import json
 import os
@@ -46,7 +49,18 @@ def construir_desde_practica(cb, c, reg, salida, carpeta, modulo, nombre_step):
         salida["archivos"].append(os.path.relpath(paso, salida["_carpeta"]))
 
 
-def cerrar_con_masa(carpeta, papel, tol, densidad_g_mm3, gemelo_mm3, factor=1.0, unidad="g"):
+TOL_CDG_MM = 0.01                           # la del juez comun
+
+
+def cerca(a, b, tol):
+    """«bien si |a - b| <= tol»: un NaN, un None o un texto dan False."""
+    try:
+        return abs(float(a) - float(b)) <= tol
+    except (TypeError, ValueError):
+        return False
+
+
+def cerrar_con_masa(carpeta, papel, tol, densidad_g_mm3, gemelo_mm3, factor=1.0, unidad="g", gemelo_cdg=None):
     ruta = os.path.join(carpeta, "salida.json")
     with open(ruta, encoding="utf-8") as f:
         s = json.load(f)
@@ -61,23 +75,41 @@ def cerrar_con_masa(carpeta, papel, tol, densidad_g_mm3, gemelo_mm3, factor=1.0,
         s["error"] = s["error_juez"]
     malos = []
     v = (s.get("resultado") or {}).get("vol")
-    if v is None:
-        malos.append("sin volumen de CATIA")
+    try:
+        v = float(v)
+    except (TypeError, ValueError):
+        v = None
+    if v is None or v != v:
+        malos.append(f"sin volumen de CATIA ({(s.get('resultado') or {}).get('vol')})")
     else:
         masa = v * densidad_g_mm3 / factor
         s["masa_catia"] = {"valor": round(masa, 4), "unidad": unidad, "papel": papel, "tolerancia": tol,
                            "dif": round(masa - papel, 4)}
         s["dif_gemelo_mm3"] = round(v - gemelo_mm3, 3)
-        if abs(masa - papel) > tol:
+        if not cerca(masa, papel, tol):
             malos.append(f"masa {masa:.4f} {unidad} contra {papel} del papel (tolerancia {tol})")
-        if abs(v - gemelo_mm3) > tol_volumen(v):
+        if not cerca(v, gemelo_mm3, tol_volumen(v)):
             malos.append(f"volumen {v} contra el gemelo de la practica {gemelo_mm3}")
         vs = s.get("volumen_step_catia_en_build123d")      # sin .venv-cad viene el texto del error
         vstep = vs.get(CLAVE_STEP) if isinstance(vs, dict) else vs
-        if not isinstance(vstep, (int, float)) or abs(vstep - v) > tol_volumen(v):
+        if not cerca(vstep, v, tol_volumen(v)):
             malos.append(f"el STEP de CATIA da {vstep} contra {v} de CATIA")
+    if gemelo_cdg is not None:
+        sp = s.get("step_catia_en_build123d")
+        sp = (sp.get(CLAVE_STEP) if isinstance(sp, dict) else None) or {}
+        c = sp.get("cdg_mm")
+        try:
+            dist = sum((float(a) - b) ** 2 for a, b in zip(c, gemelo_cdg)) ** 0.5 if len(c) == 3 else None
+        except (TypeError, ValueError):
+            dist = None
+        s["dif_cdg_gemelo_mm"] = None if dist is None or dist != dist else round(dist, 4)
+        if dist is None or not dist <= TOL_CDG_MM:
+            malos.append(f"centro de gravedad del STEP de CATIA {c} contra {list(gemelo_cdg)} del gemelo")
+        topo = tuple(sp.get(x) for x in ("solidos", "cascaras", "caras_sueltas"))
+        if topo != (1, 1, 0):
+            malos.append(f"el STEP de CATIA trae solidos/cascaras/caras sueltas {topo}: tiene que ser 1/1/0")
     s["ok_papel"] = not malos
-    s["ok"] = s["ok_pasos"] and not malos
+    s["ok"] = s["ok_pasos"] and not malos and not s["error_juez"]      # un error del juez nunca queda con verde
     if malos:
         texto = "; ".join(malos)
         s["error"] = f"{s['error']}; {texto}" if s.get("error") else texto
@@ -87,14 +119,15 @@ def cerrar_con_masa(carpeta, papel, tol, densidad_g_mm3, gemelo_mm3, factor=1.0,
     return s
 
 
-def main(ej, modulo, nombre_step, papel, tol, densidad_g_mm3, gemelo_mm3, aqui, factor=1.0, unidad="g"):
+def main(ej, modulo, nombre_step, papel, tol, densidad_g_mm3, gemelo_mm3, aqui, factor=1.0, unidad="g", gemelo_cdg=None):
     """El __main__ de cada catia.py: correr_ejercicio sin bien.py y despues la masa contra el papel."""
     import traceback
     codigo = jc.correr_ejercicio(ej, lambda cb, c, reg, salida: construir_desde_practica(cb, c, reg, salida, aqui, modulo,
                                                                                          nombre_step), con_bien=False)
     if codigo == 0 and len(sys.argv) >= 2:
         try:
-            cerrar_con_masa(os.path.abspath(sys.argv[1]), papel, tol, densidad_g_mm3, gemelo_mm3, factor, unidad)
+            cerrar_con_masa(os.path.abspath(sys.argv[1]), papel, tol, densidad_g_mm3, gemelo_mm3, factor, unidad,
+                            gemelo_cdg)
         except Exception:  # noqa: BLE001
             print("no se pudo comparar con el papel:", traceback.format_exc()[-400:], file=sys.stderr)
             codigo = 1

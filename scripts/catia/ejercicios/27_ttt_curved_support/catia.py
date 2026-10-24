@@ -15,4 +15,5 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(AQUI)))      # juez_comun y p
 import practica_en_juez as pj  # noqa: E402
 
 if __name__ == "__main__":
-    sys.exit(pj.main("27_ttt_curved_support", "ej38_curved_support", "ej38_curved_support", 1294.0, 3.0, 7.8e-3, 166112.182, AQUI))
+    sys.exit(pj.main("27_ttt_curved_support", "ej38_curved_support", "ej38_curved_support", 1294.0, 3.0, 7.8e-3, 166112.182, AQUI,
+                     gemelo_cdg=(0.0, 35.9647, 22.8158)))      # centro del gemelo (= el STEP de CATIA 11:22, 24/10)
