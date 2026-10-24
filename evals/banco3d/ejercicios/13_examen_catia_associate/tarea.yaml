@@ -1,0 +1,101 @@
+id: 13_examen_catia_associate
+nombre: Examen de muestra CATIA V5 Associate (Part Design) - Tool Block, preguntas 3 a 6 con su masa
+falla_real:
+  cita: >-
+    No es una falla de Barack: es un ejercicio de calentamiento con respuesta conocida. La lamina 12 del examen da las
+    masas (3: 934,78 g; 4: 1027,09 g; 5: 625,00 g; 6: 430,39 g) y la lamina 02 dice que si la respuesta no esta entre
+    las opciones, lo mas probable es que el modelo este mal (lamina 05: opcion a menos de 1 %).
+  fecha: 2026-10-23
+  fuente: >-
+    Punto 5d de la tanda del viernes 23/10/2026: AGREGADO_1_CICLO_DE_PRACTICA_23-10.md l.20-23 (carpeta
+    viernes-23-plan-sistema de la nube de Ingenieria), que nombra este examen como calentamiento con masas de
+    respuesta. El esperado de cada pieza BIEN sale de la lamina 12 del examen, no de una pieza real.
+de_donde_sale:
+  documento: >-
+    «CATIA V5 Associate - Part Design (PDG) Sample Exam», Dassault Systemes, V2-2015/03/30. Copia de SlideShare
+    (https://www.slideshare.net/slideshow/catia-v5-associate_sample-exam-pdg-part-design/269352140, subida 27/05/2024,
+    13 laminas), bajada el 23/10/2026; no cotejada con el original de Dassault. No se redistribuye: las laminas NO
+    estan en el repo (ver LICENSES/NOTICE.md).
+  carpeta: "Ingeniería y Proyecto - General/ASISTENTE INGENIERIA/5- FACUNDO (memoria y configuracion)/viernes-23-plan-sistema/banco3d-material/fuentes/catia_v5_associate_sample_exam/"
+  sha256:
+    FUENTE.txt: 7fd80aa010ff4b2887e1661d315cc2598f62be4a08463086bc984799e4f3c764
+    lamina_01.jpg: 8d10c22bf22032312a3ff72ea1faae70e7223ca4554f8049951e1afd79bd1b2b
+    lamina_02.jpg: 5249985e8735b7083c3e860dd0ae90c52278f852f846d91d5ee664f805281d16
+    lamina_03.jpg: 3e19e98ac70c2b1b94a8fc2566e09f1c2a77bc91943f79bedfb96cbe4591db09
+    lamina_04.jpg: 327502125f69cd283030db6855123a30c5c2763792e1a78bb2a0375b2f03f0e6
+    lamina_05.jpg: 227c11a04c345af0551e9dad0861c47a15abd4f47224963ce651b1565dba95eb
+    lamina_06.jpg: 4fd52fb8affa145522c6172a7f6edd5c55e1a55da9b66a0da74bb4e3a3741680
+    lamina_07.jpg: 5d1cdff2bce05af446f0982e527525b7721d72f90760307b8d845ec92d53517b
+    lamina_08.jpg: d37d9efdf5bdaa1017ba650a4c63c5e1c2e272b30e39852066199d11860de8bc
+    lamina_09.jpg: 4aa0b544e0ebb39e2af938539cc8bb17db6ebd5e945392064bbe04960d01a2e8
+    lamina_10.jpg: 034fbf65310ba738d4e0b344fa4a731f799662388c515ec3186423452ea24569
+    lamina_11.jpg: 336de3a5e66d7d2695d4ebc31f773ac82010510f3a9a274966a3b8c2dc436aeb
+    lamina_12.jpg: 467d1881675ef75abcdf4100d011c70727e89a616e470805ccbe1ffdb6f1d066
+    lamina_13.jpg: 29f84176c8b888f50bdaa7426ad840efaf7cbc6124c8a3eb33da615d3147d62d
+  mapa: >-
+    01 tapa; 02 instrucciones; 03 preguntas 1 y 2 (dibujo: no entran); 04 plano del Tool Block (cotas A, B, C);
+    05 pregunta 3; 06 pregunta 4; 07 y 08 plano y vistas 3D de la pregunta 5; 09 pregunta 5; 10 plano de la
+    pregunta 6; 11 pregunta 6; 12 respuestas; 13 cierre.
+pedido: >-
+  Modelar el Tool Block del examen en sus cuatro estados (preguntas 3 a 6: MMGS, 2 decimales, origen libre, agujeros
+  pasantes salvo que se muestre otra cosa, material Steel) y que la masa de cada uno caiga a 1 g o menos de la
+  respuesta de la lamina 12. Un solo script parametrico (A, B, C y los cortes de las preguntas 5 y 6 como pasos).
+preguntas:
+  q3: {lamina: "05", A: 81.00, B: 57.00, C: 43.00, masa_esperada_g: 934.78, opciones_g: [1028.33, 118.93, 577.64, 934.78]}
+  q4: {lamina: "06", A: 84.00, B: 59.00, C: 45.00, masa_esperada_g: 1027.09}
+  q5: {lamina: "09", A: 86.00, B: 58.00, C: 44.00, masa_esperada_g: 625.00}
+  q6: {lamina: "11", A: 86.00, B: 58.00, C: 44.00, masa_esperada_g: 430.39, nota: "cotas no mostradas = las de la 5"}
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    masas_esperadas_g: {q3: 934.78, q4: 1027.09, q5: 625.00, q6: 430.39}
+    nota: >-
+      Las cuatro preguntas en un solo STEP, como solidos con nombre q3, q4, q5, q6 (el contrato del banco admite una
+      sola BIEN por ejercicio: el veredicto por pregunta sale de las medidas del corrector). Armadas con build123d
+      desde el dibujo (no hay STEP del examen); ademas deja un STEP por pregunta (<nombre>__q3.step ...) para abrirlo.
+  - archivo: mal_1_q3_sin_agujero_14.py
+    esperado: rojo
+    falla: "q3 sin el agujero pasante de 14 de la orejeta: pesa 986,81 g, 52,03 g de mas"
+    nota: >-
+      La diferencia sale a mano, sin el modelo: pi x 7^2 x 43 mm3 x 0,00786 g/mm3 = 52,03 g (el modelo da +52,030:
+      volumen +6619,336 mm3). Las otras tres preguntas quedan bien.
+  - archivo: mal_2_q5_sin_corte_r41.py
+    esperado: rojo
+    falla: "q5 sin la ranura de 24 con fondo R41 (seccion M-M sin leer): 798,54 g, 173,54 g de mas"
+    nota: >-
+      La masa de este mutante la da el modelo, no el examen. Las otras tres preguntas quedan bien (la q6 con su ranura,
+      aunque en el examen la 6 sale de la 5).
+  - archivo: mal_3_q6_vaciado_sin_paredes.py
+    esperado: rojo
+    falla: "q6 con el vaciado de 1 TYP derecho hasta la pared de atras, sin la pared de 1 alrededor de la ranura (seccion U-U mal leida): 416,20 g, 14,19 g de menos"
+    nota: "La masa de este mutante la da el modelo, no el examen. Las otras tres preguntas quedan bien."
+controles:
+  - nombre: masa_esperada
+    existe: true
+    formato: step
+    opciones: ["--esperado", "q3=934.78,q4=1027.09,q5=625.00,q6=430.39", "--tolerancia", "1", "--densidad", "7.86"]
+    nota: >-
+      Las masas de --esperado son las de preguntas (lamina 12). Densidad 7,86 g/cm3: el «Steel» de CATIA V5
+      (7860 kg/m3 en el informe que genera CATIA, en la skill cad-design:
+      scripts/catia/_casos_fem/informe_completo_ej60.html l.82 y l.94). Tolerancia 1 g: la del pedido del 5d (el
+      examen pide 1 % entre opciones).
+formatos: [step, stl]
+notas: >-
+  Ejes de la pieza: x a lo largo de A, y a lo largo de B, z a lo largo de C (z=0 la cara de atras, z=C la del rebaje
+  de 19). Lo que el plano dibuja sin acotar se dedujo del dibujo (supuestos), y la masa lo confirma: las cuatro
+  preguntas dan a 0,004 g o menos de la lamina 12 (q3 934,782; q4 1027,094; q5 625,003; q6 430,392).
+  Supuestos: (1) lamina 04: el centro del R19 no tiene cota; sale de la tangencia con la recta de 10 grados (simbolo
+  de tangencia) que arranca en x=14, y de que el arco termina donde empieza el plano superior (29 del borde derecho);
+  de las dos soluciones se toma la del dibujo (centro a la izquierda, x 35,54 en la q3). (2) El centro del R29 esta
+  sobre la diagonal (la cruz del centro esta dibujada sobre la linea; solo tiene la cota 19 de altura). (3) El R5 es
+  tangente al fondo de la orejeta y al R29 (simbolo de tangencia). (4) Lamina 07: el centro del R41 esta sobre la
+  vertical del borde derecho (x=A: la cruz y su linea de centro estan ahi, sin cota horizontal); la cota 36 ubica el
+  fin del arco sobre la diagonal. (5) Orejas 12 atras y C-36 adelante (8 en la q5), ranura 24; el rebaje de 19 es
+  del lado de la oreja de adelante (la planta y la vista lateral coinciden). (6) Lamina 10: el vaciado va desde la
+  cara de adelante, con el contorno del bloque derecho (x de A-52 a A, y desde 19) 1 hacia adentro y esquinas vivas,
+  hasta dejar 12 atras (seccion U-U); no entra a la ranura: deja 1 alrededor (R42) y 1 delante (z de 36 a 37); sin
+  tubo alrededor del agujero de 11 (la vista de frente muestra un solo circulo).
+  Limite del control: la masa no ve un espejo (orejas 12 y 8 cambiadas, rebaje del otro lado) ni dos errores que se
+  compensan; es un control de lectura del plano, no de forma.
+  Dato al margen: entre las opciones de la q3, 118,93 coincide con el volumen de la q3 en cm3 (118,929).
+  Cada pieza (las cuatro preguntas) se arma en unos 17 s.
