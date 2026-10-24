@@ -606,3 +606,38 @@ describe('el wrapper permiso-guard.sh llega a permisoGuard.mjs (bash -> node, co
     expect(grupos[0].hooks.map((h) => h.command)).toEqual(['bash "${CLAUDE_PROJECT_DIR}/.claude/hooks/permiso-guard.sh"']);
   });
 });
+
+// 24/10/2026 (cola del 24/10 00:45): el ESTADO.json de la tanda del viernes era la lista de la hora y el cartel negado se
+// anoto en markdown al final: el JSON quedo roto y estado.mjs dejo de poder leerlo. Si la lista es un .json, el renglon va
+// a un .md al lado y el JSON no se toca. (Las carpetas temporales de estos casos quedan en os.tmpdir(): no se borra nada.)
+describe('anotarEnLista con una lista .json: el JSON queda intacto y el cartel va a <lista>.carteles.md', () => {
+  it('escribe el renglon en el .md de al lado, lo informa, y el JSON sigue parseando', () => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'permiso-json-'));
+    const estado = path.join(home, 'ESTADO.json');
+    const original = JSON.stringify({ items: [{ id: '3e', passes: true }] }, null, 1);
+    fs.writeFileSync(estado, original);
+    const renglon = '- **Cartel negado 2026-10-24 00:45** Write · ESTADO.json · sesión 8ec29120';
+    const r = P.anotarEnLista(estado, renglon, { clave: 'Write · ESTADO.json' });
+    expect(r.ok).toBe(true);
+    expect(r.como).toBe('agregado');
+    expect(r.archivo).toBe(path.join(home, 'ESTADO.carteles.md'));
+    expect(fs.readFileSync(estado, 'utf8')).toBe(original);
+    expect(() => JSON.parse(fs.readFileSync(estado, 'utf8'))).not.toThrow();
+    const md = fs.readFileSync(r.archivo, 'utf8');
+    expect(md).toContain(renglon);
+    // el mismo cartel de nuevo: ya estaba, y el .md no lo duplica
+    const r2 = P.anotarEnLista(estado, renglon, { clave: 'Write · ESTADO.json' });
+    expect(r2.como).toBe('ya_estaba');
+    expect(fs.readFileSync(r.archivo, 'utf8').split(renglon).length - 1).toBe(1);
+  });
+  it('una lista .md sigue como siempre: el renglon va adentro y no aparece ningun archivo al lado', () => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'permiso-md-'));
+    const lista = path.join(home, 'lista.md');
+    fs.writeFileSync(lista, '# lista\n');
+    const r = P.anotarEnLista(lista, '- **Cartel negado 2026-10-24 00:45** Bash · algo · sesión x', { clave: 'Bash · algo' });
+    expect(r.ok).toBe(true);
+    expect(r.archivo).toBeUndefined();
+    expect(fs.readFileSync(lista, 'utf8')).toContain('Cartel negado');
+    expect(fs.existsSync(path.join(home, 'lista.carteles.md'))).toBe(false);
+  });
+});

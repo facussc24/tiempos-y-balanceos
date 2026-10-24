@@ -273,7 +273,14 @@ function conCandado(lista, fn) {
  */
 export function anotarEnLista(lista, renglon, opciones = {}) {
   if (!lista || !fs.existsSync(lista)) return { ok: false, como: 'sin_lista' };
-  return conCandado(lista, () => anotarSinCandado(lista, renglon, opciones));
+  // 24/10/2026 (cola del 24/10 00:45): si la lista es un JSON (el ESTADO.json de una tanda), un renglon markdown al final
+  // la rompe y nadie puede leerla mas. Los carteles van entonces a un .md al lado (<lista sin .json>.carteles.md).
+  const destino = /\.json$/i.test(lista) ? lista.replace(/\.json$/i, '.carteles.md') : lista;
+  if (destino !== lista && !fs.existsSync(destino)) {
+    try { fs.writeFileSync(destino, ''); } catch (e) { return { ok: false, como: 'error', error: String((e && e.code) || e) }; }
+  }
+  const r = conCandado(destino, () => anotarSinCandado(destino, renglon, opciones));
+  return destino === lista ? r : { ...r, archivo: destino };
 }
 function anotarSinCandado(lista, renglon, { clave = renglon, tope = CANON.tope_renglones } = {}) {
   let texto = '';
