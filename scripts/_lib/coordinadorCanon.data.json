@@ -350,6 +350,8 @@
     "colaBytes": 16777216,
     "_colaBytes": "Se leen los ultimos 16 MB del transcript: el entero tarda 6,4 s con el de 280 MB (informe 01). Una cita de un mensaje mas viejo que eso no se encuentra (aviso o freno de mas, no un verde falso).",
     "maxMensajes": 300,
+    "cabezaBytes": 2097152,
+    "_cabezaBytes": "Ademas de la cola, se leen los primeros 2 MB del transcript para tener SIEMPRE el primer mensaje humano de la sesion (el prompt de Fak): la noche del 24/10/2026 tres citas copiadas del prompt de la tanda (13:01) salieron «no rastreada» porque el prompt ya estaba fuera de la cola de 300 mensajes. El de una hija (Background ...) sigue afuera por noEsDeFakLocal.",
     "registro": ".encargo-cita.log"
   }
 }

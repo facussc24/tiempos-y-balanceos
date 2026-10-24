@@ -328,3 +328,35 @@ describe('6g · main() por proceso (HOME de prueba): el aviso llega por addition
     expect(g4.stderr).toMatch(/BLOQUEO/);
   });
 });
+
+// 24/10/2026 (cola del 24/10 01:03): en una sesion larga el prompt de Fak queda fuera de la cola de maxMensajes y una cita
+// copiada de ahi salia «no rastreada» (paso tres veces la noche del 24/10 con el prompt de la tanda de las 13:01).
+describe('C11 · el PRIMER mensaje de la sesion (el prompt de Fak) se mira siempre, ademas de la cola', () => {
+  const PROMPT = `Tanda del viernes: ${LITERAL}. Despues segui con la lista hasta que todo este en verde.`;
+  const relleno = (k) => deFak(`mensaje de relleno numero ${k} sin nada que ver con el pedido original de la tanda`,
+    new Date(Date.parse('2026-10-23T16:00:00Z') + k * 60000).toISOString());
+  const muchos = Array.from({ length: CITA.maxMensajes + 20 }, (_, k) => relleno(k + 1));
+
+  it('VERDE: el prompt esta fuera de los ultimos maxMensajes y la cita igual se rastrea', () => {
+    const tp = transcript([deFak(PROMPT, '2026-10-23T15:31:00.000Z'), ...muchos]);
+    const ms = mensajesDeFakDeLaSesion({ transcript_path: tp }, HOME);
+    expect(ms.length).toBe(CITA.maxMensajes + 1);
+    expect(ms[0].texto).toBe(PROMPT);
+    expect(revisar(agente(conCita(LITERAL), {}, tp)).resultado).toBe('cita rastreada');
+  });
+
+  it('ROJO: si el primer mensaje es el arranque de una hija (Background …), no cuenta como palabras de Fak', () => {
+    const tp = transcript([deFak(`Background (from the session that started this one):\n${PROMPT}`, '2026-10-23T15:31:00.000Z'), ...muchos]);
+    const ms = mensajesDeFakDeLaSesion({ transcript_path: tp }, HOME);
+    expect(ms.length).toBe(CITA.maxMensajes);
+    expect(ms[0].texto).not.toMatch(/Background/);
+    expect(revisar(agente(conCita(LITERAL), {}, tp)).resultado).toBe('cita no rastreada');
+  });
+
+  it('el prompt que ya esta en la cola no se duplica', () => {
+    const tp = transcript([deFak(PROMPT, '2026-10-23T15:31:00.000Z'), relleno(1), relleno(2)]);
+    const ms = mensajesDeFakDeLaSesion({ transcript_path: tp }, HOME);
+    expect(ms.length).toBe(3);
+    expect(ms.filter((m) => m.texto === PROMPT).length).toBe(1);
+  });
+});

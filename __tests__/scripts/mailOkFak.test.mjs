@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { pedidoDeEnvio, ultimoMensajeDeFak, veredicto, claveAsunto } from '../../scripts/_lib/mailOkFak.mjs';
+import { pedidoDeEnvio, ultimoMensajeDeFak, veredicto, claveAsunto, mensajesDeFak, primerMensajeDeFak } from '../../scripts/_lib/mailOkFak.mjs';
 
 const s = (iso) => Date.parse(iso) / 1000;
 const ASUNTO = 'tiempos forrado ductos patagonia - videos del 07/10';
@@ -82,5 +82,38 @@ describe('veredicto — el incidente del 08/10/2026', () => {
   it('con varios borradores del mismo asunto manda el mas nuevo', () => {
     const reg = [...registro, { entry_id: 'E9', clave: ASUNTO, armado_epoch: s('2026-10-08T12:30:00Z') }];
     expect(veredicto({ pedido, ultimoFakMs: Date.parse('2026-10-08T12:27:00Z'), registro: reg }).ok).toBe(false);
+  });
+});
+
+// 24/10/2026: el primer mensaje real de Fak (su prompt) se lee del PRINCIPIO del transcript, con un tope de bytes, para el
+// guardian 6g (coordinadorGuard.mensajesDeFakDeLaSesion): la cola de colaBytes lo pierde en una sesion larga.
+describe('primerMensajeDeFak: el prompt de la sesion, leyendo solo la cabeza del transcript', () => {
+  const linea = (texto, ts) => JSON.stringify({ type: 'user', sessionId: 's1', timestamp: ts, message: { role: 'user', content: texto } });
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'primer-fak-'));
+  const f = path.join(tmp, 'tr.jsonl');
+  const L1 = linea('arranca la tanda del viernes y segui hasta las ocho de la noche', '2026-10-23T16:01:00.000Z');
+  const L2 = linea('otro mensaje, mas tarde', '2026-10-23T17:01:00.000Z');
+  const L3 = linea('y el ultimo', '2026-10-23T18:01:00.000Z');
+  fs.writeFileSync(f, `${L1}\n${L2}\n${L3}\n`);
+
+  it('sin tope lee todo y devuelve el primero; con la cola (colaBytes) el primero no esta', () => {
+    expect(primerMensajeDeFak(f).texto).toMatch(/^arranca la tanda/);
+    const cola = mensajesDeFak(f, { colaBytes: L3.length + 1 });
+    expect(cola.map((m) => m.texto)).toEqual(['y el ultimo']);
+  });
+  it('con un tope que corta la segunda linea, la cortada se descarta sola y el primero vuelve entero', () => {
+    const p = primerMensajeDeFak(f, { cabezaBytes: L1.length + 1 + Math.floor(L2.length / 2) });
+    expect(p.texto).toMatch(/^arranca la tanda/);
+    expect(p.ts).toBe(Date.parse('2026-10-23T16:01:00.000Z'));
+  });
+  it('un tope mas chico que la primera linea, o un archivo que no existe: null (nadie inventa un prompt)', () => {
+    expect(primerMensajeDeFak(f, { cabezaBytes: 20 })).toBe(null);
+    expect(primerMensajeDeFak(path.join(tmp, 'no-existe.jsonl'))).toBe(null);
+  });
+  it('el primero no cuenta si es un resultado de herramienta o un aviso de la app', () => {
+    const g = path.join(tmp, 'tr2.jsonl');
+    const aviso = JSON.stringify({ type: 'user', sessionId: 's1', timestamp: '2026-10-23T16:00:00.000Z', message: { role: 'user', content: '<task-notification>x</task-notification>' } });
+    fs.writeFileSync(g, `${aviso}\n${L1}\n`);
+    expect(primerMensajeDeFak(g).texto).toMatch(/^arranca la tanda/);
   });
 });

@@ -50,7 +50,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { detectarSegundaTarea, detectarIrreversibles, normalizar } from '../_encargo.mjs';
-import { mensajesDeFak } from './mailOkFak.mjs';
+import { mensajesDeFak, primerMensajeDeFak } from './mailOkFak.mjs';
 import { distancia } from './correccionGuard.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
@@ -577,10 +577,17 @@ export function mensajesDeFakDeLaSesion(payload, home = os.homedir()) {
   const ruta = rutaTranscript(payload, home);
   if (!ruta) return null;
   const ms = mensajesDeFak(ruta, { colaBytes: CITA.colaBytes });
-  return ms ? filtrarLocales(ms) : null;
+  if (!ms) return null;
+  const cola = filtrarLocales(ms);
+  // 24/10/2026 (cola del 24/10 01:03): el PRIMER mensaje humano de la sesion (el prompt de Fak) se mira siempre, ademas
+  // de la cola: en una sesion larga queda fuera de colaBytes / maxMensajes y una cita copiada de ahi salia «no rastreada»
+  // (tres veces la noche del 24/10). El de una hija («Background …») sigue afuera por los prefijos locales.
+  const primero = Number(CITA.cabezaBytes) > 0 ? primerMensajeDeFak(ruta, { cabezaBytes: CITA.cabezaBytes }) : null;
+  if (primero && !esLocal(primero) && !cola.some((m) => m.ts === primero.ts && m.texto === primero.texto)) cola.unshift(primero);
+  return cola;
 }
-const filtrarLocales = (ms) => ms.filter((m) => !CITA.noEsDeFakLocal.prefijos.some((p) => String(m.texto).trimStart().startsWith(p)))
-  .slice(-CITA.maxMensajes);
+const esLocal = (m) => CITA.noEsDeFakLocal.prefijos.some((p) => String(m.texto).trimStart().startsWith(p));
+const filtrarLocales = (ms) => ms.filter((m) => !esLocal(m)).slice(-CITA.maxMensajes);
 
 /** Una linea por caso en ~/.claude/.encargo-cita.log (fecha, sesion, tool, tipo, resultado, nivel, detalle). */
 function anotar(home, campos) {

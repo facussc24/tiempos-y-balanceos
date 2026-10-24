@@ -50,6 +50,19 @@ function leerTranscript(f, colaBytes) {
   } finally { fs.closeSync(fd); }
 }
 
+/** El transcript entero, o sus primeros `cabezaBytes` bytes si es mas grande que eso (el prompt de la sesion esta ahi). */
+function leerCabeza(f, cabezaBytes) {
+  if (!(Number(cabezaBytes) > 0)) return fs.readFileSync(f, 'utf8');
+  const fd = fs.openSync(f, 'r');
+  try {
+    const { size } = fs.fstatSync(fd);
+    const n = Math.min(size, Number(cabezaBytes));
+    const buf = Buffer.alloc(n);
+    fs.readSync(fd, buf, 0, n, 0);
+    return buf.toString('utf8');
+  } finally { fs.closeSync(fd); }
+}
+
 const textoDeBloques = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((b) => b?.type === 'text').map((b) => b.text || '').join('\n') : '');
 
 /** Epoch ms del ultimo mensaje REAL de Fak en el transcript (el que escribe mientras trabajo, tambien). 0 si no hay. */
@@ -69,8 +82,26 @@ export function ultimoMensajeDeFak(transcriptPath) {
  * como siempre.
  */
 export function mensajesDeFak(transcriptPath, { colaBytes } = {}) {
-  let lineas;
-  try { lineas = leerTranscript(transcriptPath, colaBytes).split('\n'); } catch { return null; }
+  let texto;
+  try { texto = leerTranscript(transcriptPath, colaBytes); } catch { return null; }
+  return parsearMensajes(texto);
+}
+
+/**
+ * El PRIMER mensaje real de Fak del transcript (el prompt con el que abrio la sesion), leyendo solo los primeros
+ * `cabezaBytes` bytes (24/10/2026, cola del 24/10 01:03: en una sesion larga el prompt cae fuera de la cola de
+ * `colaBytes` / `maxMensajes` y el guardian 6g decia «no esta en ningun mensaje de Fak» de una cita copiada de ahi).
+ * La ultima linea, cortada, no parsea y se descarta sola. null si el transcript no se puede leer o no hay ninguno.
+ */
+export function primerMensajeDeFak(transcriptPath, { cabezaBytes } = {}) {
+  let texto;
+  try { texto = leerCabeza(transcriptPath, cabezaBytes); } catch { return null; }
+  const ms = parsearMensajes(texto);
+  return ms.length ? ms[0] : null;
+}
+
+function parsearMensajes(texto) {
+  const lineas = String(texto).split('\n');
   const out = [];
   for (const linea of lineas) {
     if (!linea.includes('"type":"user"') && !linea.includes('"queued_command"')) continue;
