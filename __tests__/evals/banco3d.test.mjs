@@ -99,3 +99,34 @@ describe('banco3d: corrida real (lenta, BANCO3D_LENTO=1)', () => {
     900000,
   );
 });
+
+// 5d (24/10/2026): un ejercicio con respuesta conocida (el examen de muestra CATIA V5 Associate, ejercicio 13) declara las
+// masas tres veces: en `preguntas`, en `masas_esperadas_g` de la BIEN y en el `--esperado` del corrector masa_esperada.
+// Si una se corrige y las otras no, el banco mide contra un numero y el yaml documenta otro. Lo pidieron el constructor
+// y el revisor del 5d: los tres lugares dicen lo mismo, con los mismos nombres (q3..q6).
+describe('banco3d: ejercicios con respuesta conocida (masas declaradas tres veces)', () => {
+  const conPreguntas = tareas.filter(({ t }) => t.preguntas && typeof t.preguntas === 'object');
+  it('hay al menos uno (el 13, examen CATIA Associate)', () => {
+    expect(conPreguntas.map((x) => x.dir)).toContain('13_examen_catia_associate');
+  });
+  for (const { dir, t } of conPreguntas) {
+    it(`${dir}: preguntas, masas_esperadas_g de la BIEN y --esperado del corrector coinciden nombre por nombre`, () => {
+      const dePreguntas = Object.fromEntries(Object.entries(t.preguntas).map(([q, p]) => [q, Number(p.masa_esperada_g)]));
+      const bien = (t.piezas || []).find((p) => p.esperado === 'verde');
+      expect(bien, 'la BIEN').toBeTruthy();
+      const deBien = Object.fromEntries(Object.entries(bien.masas_esperadas_g || {}).map(([q, m]) => [q, Number(m)]));
+      const control = (t.controles || []).find((c) => c.nombre === 'masa_esperada');
+      expect(control, 'el control masa_esperada').toBeTruthy();
+      const i = control.opciones.indexOf('--esperado');
+      expect(i, '--esperado en las opciones').toBeGreaterThanOrEqual(0);
+      const deControl = Object.fromEntries(control.opciones[i + 1].split(',').map((par) => {
+        const [q, m] = par.split('=');
+        return [q.trim(), Number(m)];
+      }));
+      expect(Object.keys(dePreguntas).sort()).toEqual(['q3', 'q4', 'q5', 'q6']);
+      expect(deBien).toEqual(dePreguntas);
+      expect(deControl).toEqual(dePreguntas);
+      for (const m of Object.values(dePreguntas)) expect(Number.isFinite(m) && m > 0, `masa ${m}`).toBe(true);
+    });
+  }
+});
