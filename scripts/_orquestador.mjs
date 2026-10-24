@@ -45,6 +45,7 @@ export function ledgerEnVentana(desdeMs, hastaMs, dir = process.env.BARACK_API_D
       try { e = JSON.parse(l); } catch { continue; }
       const ms = Date.parse(String(e.ts || '').replace(' ', 'T'));        // sello local sin zona
       if (!(ms >= desdeMs && ms <= hastaMs)) continue;
+      if (e.frenado) continue;   // el freno del ciclo no dejo llamar (claudeApi.frenoDelCiclo): no es un pedido
       out.pedidos++;
       out.usd += Number(e.costoUsd) || 0;
       out.tareas.push(String(e.tarea || ''));

@@ -16,13 +16,16 @@
  * miran ANTES de cada llamada; el de dolares estima el proximo paso con la entrada del anterior, asi que un paso que lee
  * muchas paginas puede pasarlo (cada pagina trae hasta LECTURA_MAX_TOKENS). Un paso = una llamada.
  * No toca claudeApi.mjs: usa armarParametros/interpretarRespuesta/registrarGasto y suma lo que falta encima.
+ * El freno del ciclo de la puerta (frenarEnLaPuerta, 23/10/2026) se mira antes de CADA paso con la clave del cliente: el
+ * agente llama a la API sin pasar por llamar(), y fue el 18 % del gasto de octubre. Un permiso ~/.claude/.api-tope-ok
+ * vale para la corrida entera (una corrida = un uso).
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { armarParametros, interpretarRespuesta, resolverModelo, costoUsd, registrarGasto, etiquetaClave, selloLocal, usd, fraseFableDe } from './claudeApi.mjs';
+import { armarParametros, interpretarRespuesta, resolverModelo, costoUsd, registrarGasto, etiquetaClave, selloLocal, usd, fraseFableDe, frenarEnLaPuerta } from './claudeApi.mjs';
 import { escribirSeguro, agregarSeguro, rutaReal as rutaRealHastaDondeExista } from './escrituraSegura.mjs';
 import { esSecreto } from '../_apiTarea.mjs';
 
@@ -546,7 +549,7 @@ const registrarEnLedger = (r, tarea, clave = null, pedidoFable = null) => regist
 export async function correrAgente({
   cliente, modelo = 'sonnet', effort = 'high', system, encargo, carpeta, corrida = 'sin-nombre', ejecutor, registro,
   topes = {}, maxTokens = 8192, guardian = guardianReal, registrar = registrarEnLedger, ahora = () => Date.now(),
-  pedidoFable,
+  pedidoFable, freno = frenarEnLaPuerta,
 }) {
   const t = { ...TOPES_DEFECTO, ...topes };
   const id = resolverModelo(modelo);
@@ -558,12 +561,17 @@ export async function correrAgente({
   };
   const ctx = { carpeta, guardian, ejecutor, registro, ahora };
   const herramientas = armarHerramientas(t.busquedas, t.lecturas);   // una sola lista para toda la corrida (ver armarHerramientas)
+  let conPermisoDeTope = false;   // la corrida paso con ~/.claude/.api-tope-ok: el permiso vale para toda la corrida
   for (;;) {
-    const freno = chequearTopes(estado, t, { modelo: id, maxTokens, ahora: ahora() });
-    if (freno) { estado.corte = freno; break; }
+    const tope = chequearTopes(estado, t, { modelo: id, maxTokens, ahora: ahora() });
+    if (tope) { estado.corte = tope; break; }
     marcarCache(mensajes);
     const { params } = armarParametros({ modelo: id, system, mensajes, maxTokens, effort, cacheTtl: '1h', fallbacks: false, pedidoFable });
     params.tools = herramientas;
+    // el tope del ciclo de la clave que paga, ANTES de pagar el paso (tira ErrorApi 'tope' y deja el renglon `frenado`)
+    if (!conPermisoDeTope) {
+      try { conPermisoDeTope = !!freno(cliente, { tarea: `agente:${corrida}`, modelo: id })?.permiso; } catch (e) { estado.corte = e?.tipo === 'tope' ? e.message : `freno del ciclo: ${tapar(e?.message ?? e)}`; break; }
+    }
     const t0 = ahora();
     let res;
     try { res = await cliente.beta.messages.create(params); } catch (e) { estado.corte = `api: ${tapar(e?.message ?? e)}`; break; }

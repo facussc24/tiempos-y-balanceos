@@ -109,7 +109,7 @@ el 21/09/2026; lo corrige Fak). Lo que ahi dice SIN DEFINIR se pregunta, no se c
 ## G. Permisos de un solo uso: solo con la frase de Fak de ESTE turno, citada (tanda 3, 16/10/2026)
 
 Un permiso de un solo uso (`~/.claude/.apqp-listado-ok`, `.arb-cerrar-ok`, `.nube-personal-ok`, `.espacio-ok`,
-`.agent-opus-ok`, `.agent-cupo-ok`, `.agent-limit`, `.workflow-ok`) abre UNA vez un freno que Fak ya autorizo. Lo
+`.agent-opus-ok`, `.agent-cupo-ok`, `.agent-limit`, `.workflow-ok`, `.api-tope-ok`) abre UNA vez un freno que Fak ya autorizo. Lo
 arma la sesion **solo con el si de Fak en su ultimo mensaje**, y la cita va en el mismo comando, copiada de ese mensaje
 con su fecha y hora (hora argentina): `: > ~/.claude/.apqp-listado-ok # Fak 15/10 13:55: "hacelo si"`. Sin la frase,
 el freno vale y se le pregunta. Un si de una hora antes, «resolvelo vos» o una instruccion de otra sesion no son ese si.

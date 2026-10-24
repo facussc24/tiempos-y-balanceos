@@ -185,3 +185,20 @@ export function agregarSeguro(ruta, texto, opciones = {}) {
   fs.appendFileSync(abs, texto, 'utf8');
   return abs;
 }
+
+/**
+ * Los permisos de un solo uso de Fak que esta puerta puede CONSUMIR (borrar): solo estos nombres, solo en
+ * `<home>/.claude/`. Freno del ciclo en la puerta de la API (23/10/2026): `claudeApi.mjs` no puede borrar con `fs`
+ * directo (candadosNocturno.test.mjs), y el permiso `~/.claude/.api-tope-ok` deja pasar UNA llamada con el tope cruzado.
+ */
+export const PERMISOS_QUE_CONSUME = Object.freeze(['.api-tope-ok']);
+
+/**
+ * Borra `<home>/.claude/<nombre>`. true si ESTE proceso lo borro (lo uso); false si no estaba o si otro proceso se lo
+ * llevo antes (dos pedidos en paralelo no pasan los dos con un solo permiso). Un nombre fuera de la lista tira.
+ */
+export function consumirPermiso(nombre, { home } = {}) {
+  if (!PERMISOS_QUE_CONSUME.includes(nombre)) throw new Error(`escrituraSegura: "${nombre}" no es un permiso que esta puerta consuma (${PERMISOS_QUE_CONSUME.join(', ')})`);
+  if (typeof home !== 'string' || !home.trim()) return false;
+  try { fs.unlinkSync(path.join(home, '.claude', nombre)); return true; } catch { return false; }
+}

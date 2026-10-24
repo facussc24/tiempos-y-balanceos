@@ -30,6 +30,29 @@ export const HORAS_VENCE = 24;
 
 export const rutaLote = (salidaDir) => path.join(salidaDir, ARCHIVO_LOTE);
 
+/** El aviso que escribe el freno del ciclo de claudeApi.mjs (frenoDelCiclo) al pasar el 60 o el 85 % del tope de una clave. */
+export const RE_AVISO_TOPE = /^aviso: la API va por el (\d+) % del tope del ciclo \(.* para la clave ([\w-]+);.*$/;
+
+/**
+ * Los avisos del freno del ciclo que un `_apiTarea.mjs` hijo dejo en su salida y que esta corrida todavia no mostro
+ * (23/10/2026). `_apiLotes.mjs` sin --lote corre cada job como proceso aparte y solo mostraba la salida de los que
+ * fallaban: el aviso de un hijo que salio bien se perdia, y con N hijos saldria N veces. Uno por clave y por umbral (60
+ * u 85) en toda la corrida: `vistos` es uno solo para todos los hijos. Puro.
+ */
+export function avisosNuevosDelFreno(salida, vistos) {
+  const nuevos = [];
+  for (const l of String(salida ?? '').split(/\r?\n/)) {
+    const m = RE_AVISO_TOPE.exec(l.trim());
+    if (!m) continue;
+    const umbral = Number(m[1]) >= 85 ? 85 : 60;
+    if (vistos.has(`${m[2]}|${umbral}`)) continue;
+    vistos.add(`${m[2]}|60`);
+    if (umbral === 85) vistos.add(`${m[2]}|85`);
+    nuevos.push(l.trim());
+  }
+  return nuevos;
+}
+
 /** Escribe un archivo de una vez (a .tmp y se renombra): un _lote.json a medias seria un lote que nadie puede recoger. */
 function escribirAtomico(ruta, texto) {
   fs.mkdirSync(path.dirname(ruta), { recursive: true });

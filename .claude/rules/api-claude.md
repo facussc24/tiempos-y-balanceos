@@ -99,7 +99,7 @@ el `node` del Programador de tareas: por eso los candados son codigo y test, no 
    `claude`, **o si un archivo de la noche escribe con `fs` directo** (`writeFileSync`, `appendFileSync`,
    `mkdirSync`, `renameSync`... solo vale adentro de `escrituraSegura.mjs`). Cada patron tiene su gemelo
    rojo. **Es el enforcement de esta regla** (RULE-GATE).
-4. **Topes de gasto, los dos pasivos (deciden ANTES de arrancar, no cortan una llamada a mitad):**
+4. **Topes de gasto: dos pasivos (deciden ANTES de arrancar, no cortan una llamada a mitad) y el de la puerta:**
    - **Del ciclo**: `BARACK_API_PRESUPUESTO_USD` (default **170** = el credito del Max 20x con 15 % de
      colchon, porque las estimaciones tienen +/-30 %). Con el ciclo en rojo la noche no arranca (salvo
      `--sin-tope`). El semaforo suma el ledger del ciclo (`ciclo del 07/09 al 06/10`), que puede caer en
@@ -115,6 +115,19 @@ el `node` del Programador de tareas: por eso los candados son codigo y test, no 
      salida en su `max_tokens`; los semanales, su estimado probable x1,3) con eso. El que no entra queda `saltado` con
      `pausa: 'budget_reached'` y vuelve la noche siguiente; los pasos que siguen corren, y la noche sale con 1
      (`pausaPorPresupuesto` en `scripts/_lib/nocturno.mjs`; test `nocturnoPausaMarcador.test.mjs`).
+   - **En la PUERTA, por clave (23/10/2026; el unico que no es pasivo):** antes de CADA pedido que se paga (`llamar`,
+     `llamarLargo` —la de `_apiTarea.mjs`—, `crearLote` —la de `_apiLotes.mjs --lote`— y cada paso del agente)
+     `frenoDelCiclo` de `claudeApi.mjs` suma lo gastado en el ciclo POR LA CLAVE QUE VA A PAGAR (el mismo reparto que
+     `saldo.json`) y, si llego a su tope, no llama: tira «tope del ciclo cruzado: US$ X de Y para la clave Z; se renueva
+     el <fecha>…» y deja un renglon `frenado: true` (costo 0) en el ledger. Avisa una linea al 60 % y al 85 %, una vez
+     por proceso. Tope de cada clave: `TOPES_CLAVE_USD`; la que no figura (principal, entorno) usa
+     `BARACK_API_PRESUPUESTO_USD` (170). La prestada del dueño va con 170 (no tenia tope escrito; su credito conocido es
+     US$ 100: lo decide Fak). Ciclo: el de facturacion; la prestada renovable, desde su recarga del 20. **Salida de un
+     solo uso:** `~/.claude/.api-tope-ok` armado con la frase de Fak (autonomy-contract.md G): pasa UNA llamada, o UNA
+     corrida del agente, y se consume. `--sin-tope` de la noche NO pasa este freno. Por que: en octubre la API llego a
+     US$ 372,76 contra 170 y el 98 % lo gastaron `_apiTarea` y el agente, que no miraban el tope (PUNTOS_DEBILES_23-10.md
+     §4). Limite: con pedidos en paralelo pasan los que ya estaban en vuelo (el ledger se anota al terminar). Test:
+     `__tests__/scripts/apiFreno.test.mjs` (fetch del SDK reemplazado por un doble, en las dos direcciones).
 5. **Un paso que falla no deja nada a medias ni tumba a los demas**: cada paso con su try/catch, todo se
    escribe a `.tmp` y se renombra, y el envoltorio `_nocturno.ps1` marca ERROR si `node` sale bien pero
    no escribio `.claude/state/nocturno.json` (resultado vacio es error). **Con tres pasos seguidos en
