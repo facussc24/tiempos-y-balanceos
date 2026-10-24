@@ -40,6 +40,12 @@
       "justifica": "Choques que ningun control vio porque solo se miraban los extremos: empujador del posicionador Top Roll que atravesaba la pared (21/07/2026), patas del carro que tocaban el marco por una arista (19/10/2026), virolador de cuatro barras (20/10/2026). Propuestas P3 y P12 del 23/10 (docs/PROPUESTAS_SKILL_3D_2026-10-23.md l.120 y l.457; Agregado l.654). Fak 23/10: modo AVISO 7 dias y despues freno.",
       "fuente": ".claude/skills/cad-design/scripts/barridoCanon.data.json (aviso_hasta, luces_frenan, luces_revisar) y barrido.py; casos D1-D10 en .claude/skills/cad-design/scripts/test_gate_barrido.py"
     },
+    "cad-design:fases-aviso-a-freno": {
+      "revisar": "2026-10-30",
+      "que": "El gate de fases del diseno 3D (gate_fase.py cerrar|pasar --fase N --workdir W; lo corre export_deliverables.py si el workdir tiene fases.json) pasa de AVISO a FRENO el 31/10/2026: desde ese dia pasar a una fase con una anterior sin cerrar, o con lo que la cerro cambiado despues (firma del STEP del conjunto, firma del conjunto del barrido, pliego), sale con 1 y la entrega con [GATE fases] y la carpeta destino sin crear. Las cinco fases son las de P1 (0 contrato, 1 concepto, 2 mecanismo con barrido verde o sin partes moviles declarado, 3 detalle con cantos medidos, 4 entrega); las fases 0 y 2 las cierra el OK de Fak con su frase, y un cambio despues del OK reabre la fase. Salida: --acepto-fase con la frase de Fak atada a la fase y a la firma. Un workdir sin fases.json solo avisa. El 30/10 se revisa lo que aviso en la semana y la decision de que cierres firma Fak (PREGUNTAS_FAK.md 20).",
+      "justifica": "20/10/2026, virolador del Upper Trim, Fak: «entraste en detalles antes de hacer que funcione 100 % el diseno... debo respetar mis fases» (memoria feedback_diseno_3d_por_fases_y_frenar_a_fak.md); la probeta de tornillo que andaba y se rompio en tres iteraciones mas despues del OK (feedback_no_seguir_optimizando_despues_del_ok.md). Propuesta P1 del 23/10 (docs/PROPUESTAS_SKILL_3D_2026-10-23.md l.47-84; Agregado l.639). Fak 23/10: modo AVISO 7 dias y despues freno.",
+      "fuente": ".claude/skills/cad-design/scripts/faseCanon.data.json (aviso_hasta, fases, pide_ok_fak) y gate_fase.py; casos F1-F7 en .claude/skills/cad-design/scripts/test_gate_fase.py"
+    },
     "lanzar-sesion-hija:camino-b": {
       "revisar": "2026-10-23",
       "que": "El camino B de lanzar una hija (tarea manual + run_scheduled_task) queda como respaldo escrito y se saca si en una semana no hizo falta.",
