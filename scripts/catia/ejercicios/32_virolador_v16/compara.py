@@ -1,6 +1,8 @@
-"""compara.py <A.step> <B.step> [--mover dx,dy,dz]: compara dos solidos con OpenCASCADE (build123d) y trimesh.
+"""compara.py <A.step> <B.step> [--mover dx,dy,dz] [--caras]: compara dos solidos con OpenCASCADE (build123d) y trimesh.
 Devuelve volumen de cada uno, lo que SOBRA (A - B) y lo que FALTA (B - A), y la distancia maxima entre superficies en
-las dos direcciones (muestreo de 20 000 puntos). Con --mover se corre B (para el gemelo: tiene que dar rojo)."""
+las dos direcciones (muestreo de 20 000 puntos). Con --mover se corre B (para el gemelo: tiene que dar rojo). Con
+--caras agrega dist_max_caras_* (una grilla por CARA del B-Rep, exacta contra la cascara del otro: ve las caras de pocos
+mm2 que la malla por area puede no tocar; 24/10, T3)."""
 import json
 import sys
 import tempfile
@@ -111,9 +113,56 @@ def exacta(puntos, dist, propio, otro, umbral=0.005):
         return None
 
 
+def por_caras(propio, otro, n=5):
+    """24/10 (revisor Fable del cierre de la tanda, T3): la malla reparte 20 000 puntos por AREA y una cara de pocos mm2
+    (el fondo de un agujero ciego D1) puede no recibir ninguno: un D1 con 2,5 de profundidad en vez de 3 quedaba verde en
+    toda la cadena. Aca CADA cara del B-Rep propio recibe una grilla n x n en su espacio (u, v) (los puntos que caen
+    adentro de la cara, mas el centro de la caja uv) y cada punto se mide EXACTO contra la cascara del otro.
+    Devuelve (peor distancia, puntos medidos, caras sin ningun punto) o None si BRepExtrema no termina."""
+    from build123d import Vertex
+    from OCP.BRepAdaptor import BRepAdaptor_Surface
+    from OCP.BRepClass import BRepClass_FaceClassifier
+    from OCP.BRepExtrema import BRepExtrema_DistShapeShape
+    from OCP.BRepTools import BRepTools
+    from OCP.gp import gp_Pnt2d
+    from OCP.TopAbs import TopAbs_IN, TopAbs_ON
+    try:
+        cascara_otra = otro.shells()[0].wrapped
+        peor, medidos, vacias = 0.0, 0, 0
+        for f in propio.faces():
+            cara = f.wrapped
+            umin, umax, vmin, vmax = BRepTools.UVBounds_s(cara)
+            sup = BRepAdaptor_Surface(cara)
+            uvs = [((umin + umax) / 2, (vmin + vmax) / 2)]
+            uvs += [(umin + (umax - umin) * (i + 0.5) / n, vmin + (vmax - vmin) * (j + 0.5) / n)
+                    for i in range(n) for j in range(n)]
+            dentro = 0
+            for u, v in uvs:
+                if BRepClass_FaceClassifier(cara, gp_Pnt2d(u, v), 1e-7).State() not in (TopAbs_IN, TopAbs_ON):
+                    continue
+                q = sup.Value(u, v)
+                e = BRepExtrema_DistShapeShape(Vertex(q.X(), q.Y(), q.Z()).wrapped, cascara_otra)
+                e.Perform()
+                if not e.IsDone():
+                    return None
+                peor, dentro = max(peor, e.Value()), dentro + 1
+            medidos += dentro
+            vacias += dentro == 0
+        return peor, medidos, vacias
+    except Exception:  # noqa: BLE001
+        return None
+
+
 ab, ab99, pa_, da_ = hasta(A, Bm)
 ba, ba99, pb_, db_ = hasta(Bm, A)
 ab_ex, ba_ex = exacta(pa_, da_, a, b), exacta(pb_, db_, b, a)
+caras = {}
+if "--caras" in sys.argv:                 # opcional hasta que los jueces lo lean (T3 de la COLA): no cambia lo de hoy
+    for clave, (x, y) in (("A_a_B", (a, b)), ("B_a_A", (b, a))):
+        r = por_caras(x, y)
+        caras[f"dist_max_caras_{clave}"] = None if r is None else round(r[0], 5)
+        caras[f"puntos_caras_{clave}"] = None if r is None else r[1]
+        caras[f"caras_sin_punto_{clave}"] = None if r is None else r[2]
 bba, bbb = a.bounding_box(), b.bounding_box()
 print(json.dumps({"vol_A": round(vol(a), 3), "vol_B": round(vol(b), 3), "sobra_A_menos_B": round(sobra, 3),
                   "falta_B_menos_A": round(falta, 3), "comun": round(comun, 3), "booleana_cierra": cierra, "tolerancia_booleana": fuzz_usado, "dist_max_A_a_B": round(ab, 4), "p99_A_a_B": round(ab99, 4),
@@ -122,4 +171,4 @@ print(json.dumps({"vol_A": round(vol(a), 3), "vol_B": round(vol(b), 3), "sobra_A
                   "dist_max_exacta_B_a_A": None if ba_ex is None else round(ba_ex, 5),
                   "caja_A": [round(bba.size.X, 3), round(bba.size.Y, 3), round(bba.size.Z, 3)],
                   "caja_B": [round(bbb.size.X, 3), round(bbb.size.Y, 3), round(bbb.size.Z, 3)],
-                  "solidos": [len(a.solids()), len(b.solids())]}))
+                  "solidos": [len(a.solids()), len(b.solids())], **caras}))
