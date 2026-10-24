@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Espesor de 3 sobre una superficie CURVA en CATIA (como un tapizado sobre su sustrato): arco R600 de 310 de largo (medido) extruido 95 y AddNewThickSurface hacia adentro (R 597-600) y hacia afuera (R 600-603), cada uno en su pieza; el lado se decide por el centro de lo que queda; volumen, centro y STEP de cada lado contra la cuenta del sector de anillo; pieza = ej83 de la practica con dos cambios anotados",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "la cuenta del sector de anillo con t = 310 / 600: V = t / 2 (R2^2 - R1^2) h y el centro sobre +Y a 2/3 (R2^3 - R1^3) / (R2^2 - R1^2) sen(t/2) / (t/2), z 47,5",
+  "valor": {"adentro_mm3": 88129.125, "afuera_mm3": 88570.875, "adentro_cdg_y_mm": 591.8665, "afuera_cdg_y_mm": 594.8332},
+  "unidad": "mm3",
+  "tolerancia": {"volumen_mm3": 0.5, "cdg_mm": 0.01, "largo_arco_mm": 0.001},
+  "fuente": "la formula de la fila 54 de COLA_CATIA.md (la fila escribe 88 127,7 y 88 569,4, que no cierran con su formula; el ej83 de la practica midio 88 129,12); la prueba la cruza con el sector como poligono de 20 000 lados"
+ }
+}
