@@ -1250,10 +1250,13 @@ def lanzar_vigilancia(argv, carpeta):
         dueno = json.loads((carpeta / "vigilancia.pid").read_text(encoding="utf-8")).get("pid")
     except (OSError, ValueError, AttributeError):
         dueno = None
-    if dueno == p.pid and _pid_vivo(p.pid):
-        print(f"  VIGILANDO: proceso aparte PID {p.pid}; deja {carpeta / 'seguimiento.log'} y las fotos en esa carpeta. "
+    # El python.exe de un venv de uv es un lanzador: el interprete real (el que escribe vigilancia.pid con su os.getpid())
+    # es un proceso HIJO del Popen. Vale si el pid del archivo esta vivo y es el nuestro o el lanzador sigue vivo (23/10/2026).
+    if dueno and _pid_vivo(dueno) and (dueno == p.pid or p.poll() is None):
+        extra = "" if dueno == p.pid else f" (interprete real PID {dueno})"
+        print(f"  VIGILANDO: proceso aparte PID {p.pid}{extra}; deja {carpeta / 'seguimiento.log'} y las fotos en esa carpeta. "
               "No lances otra vigilancia sobre esa carpeta (saldría 15)")
-        return {"resultado": "vigilando", "pid": p.pid, "salida": None}
+        return {"resultado": "vigilando", "pid": p.pid, "pid_interprete": dueno, "salida": None}
     print(f"  AVISO: el proceso aparte (PID {p.pid}) no dejó su vigilancia.pid en {VIGILANCIA_ESPERA_S:.0f} s: no lo doy "
           f"por vigilando. Mirá {carpeta / CONSOLA_VIGILANCIA}; si no aparece, {a_mano}")
     return {"resultado": "sin confirmar", "pid": p.pid, "salida": None}

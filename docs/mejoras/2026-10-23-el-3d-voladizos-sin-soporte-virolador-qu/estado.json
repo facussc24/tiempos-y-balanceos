@@ -40,9 +40,9 @@
     {
       "n": 6,
       "nombre": "Medir de nuevo: entra solo si el banco sube y nada que pasaba deja de pasar",
-      "hecho": true,
-      "evidencia": "banco en main tras el 3a: los 15 congelados siguen 14/15 y BIEN 7/7 (sin regresion); con el caso nuevo 08 del gate: 15/16 y BIEN 9/9; la placa v4 real por el gate da AVISO (ROJO) donde antes no corria nada · congelado 14/15 (BIEN 7/7) → nuevo 15/16 (BIEN 9/9)",
-      "fecha": "2026-10-23 16:29"
+      "hecho": false,
+      "evidencia": "REVERTIDO 23/10 22:10 (revision Opus): el 3a no hizo subir el banco sobre los casos CONGELADOS (14/15 → 14/15; el 15/16 era por el caso nuevo 08, que no cuenta). Queda abierto hasta que Fak conteste la pregunta 3 de PREGUNTAS_FAK (criterio «sube» para un gate cuyo corrector ya estaba en el banco)",
+      "fecha": ""
     },
     {
       "n": 7,
@@ -54,6 +54,7 @@
   ],
   "banco": {
     "congelado": "C:\\Dev\\BarackMercosul\\evals\\banco3d\\scores\\congelado.json",
-    "atado": "2026-10-23 15:39"
+    "atado": "2026-10-23 15:39",
+    "sha": "82cbfd2de73d161c"
   }
 }
