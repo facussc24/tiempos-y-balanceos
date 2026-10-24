@@ -189,4 +189,4 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 50 | pendiente | | |
 | 51 | pendiente | | |
 | 52 | pendiente | | |
-| 53 | pendiente | | |
+| 53 | no se hace | Duplica el 32: el bien.py del ejercicio 02 del banco 3D copia el mismo STEP del v16 entregado que el 32 ya juzga contra CATIA (sobra 0, falta 0, 0,0016 mm). Medido el 24/10 leyendo bien.py (22 renglones, `copiar("v16_step", ...)`) | |
